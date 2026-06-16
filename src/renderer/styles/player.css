@@ -1,0 +1,480 @@
+/* ========================================
+   Player Bar Styles
+   Bottom playback controls with glass effect
+   ======================================== */
+
+.player-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: var(--player-bg);
+  backdrop-filter: blur(60px) saturate(200%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%);
+  border-top: 1px solid var(--border-color-light);
+  z-index: 999;
+}
+
+.player-bar-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-empty-text {
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
+
+.player-bar-glass {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  pointer-events: none;
+}
+
+.player-bar-content {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+/* Progress Bar */
+.progress-bar-container {
+  position: absolute;
+  top: -3px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  height: 16px;
+  pointer-events: none;
+}
+
+.progress-bar {
+  pointer-events: auto;
+}
+
+.progress-time {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  min-width: 36px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--glass-bg);
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+  transition: height 0.15s;
+}
+
+.progress-bar:hover {
+  height: 6px;
+}
+
+.progress-bar-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--glass-bg);
+  border-radius: 2px;
+}
+
+.progress-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--accent-primary);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+
+.progress-bar-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 12px;
+  height: 12px;
+  background: var(--accent-primary);
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(250, 88, 106, 0.5);
+  transition: transform 0.15s;
+}
+
+.progress-bar:hover .progress-bar-thumb {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Track Info */
+.player-track-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 200px;
+  max-width: 300px;
+}
+
+.player-track-cover {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-md);
+}
+
+.player-track-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.player-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  background: var(--glass-bg-heavy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-track-text {
+  overflow: hidden;
+}
+
+.player-track-name {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-track-artist {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Controls */
+.player-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  z-index: 20;
+}
+
+.control-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.control-btn:hover {
+  background: var(--glass-bg);
+}
+
+.play-btn {
+  width: 44px;
+  height: 44px;
+  background: var(--accent-primary);
+  color: white;
+}
+
+.play-btn:hover {
+  background: var(--accent-secondary);
+  transform: scale(1.05);
+}
+
+.mode-btn {
+  color: var(--text-secondary);
+}
+
+.mode-btn-active {
+  color: var(--accent-primary);
+}
+
+/* Light variant for lyrics page */
+.player-controls-light .control-btn {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.player-controls-light .control-btn:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.player-controls-light .play-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.player-controls-light .play-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.player-controls-light .mode-btn-active {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Right Section */
+.player-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 200px;
+  justify-content: flex-end;
+}
+
+/* Volume */
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.volume-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.volume-btn:hover {
+  color: var(--text-primary);
+}
+
+.volume-bar {
+  width: 80px;
+  height: 4px;
+  background: var(--glass-bg);
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+  transition: height 0.15s ease;
+}
+
+.volume-bar:hover {
+  height: 6px;
+}
+
+.volume-bar-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--glass-bg);
+  border-radius: 2px;
+}
+
+.volume-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--text-secondary);
+  border-radius: 2px;
+}
+
+.volume-bar-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 10px;
+  height: 10px;
+  background: var(--text-primary);
+  border-radius: 50%;
+  transition: transform 0.15s;
+  pointer-events: none;
+}
+
+.volume-bar:hover .volume-bar-thumb {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Player Actions */
+.player-action-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.player-action-btn:hover {
+  background: var(--glass-bg);
+  color: var(--text-primary);
+}
+
+.player-action-active {
+  color: var(--accent-primary);
+}
+
+.player-lyrics-btn {
+  font-size: 16px;
+  font-weight: 700;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  letter-spacing: 0;
+}
+
+/* Queue Panel */
+.queue-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 80px;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.queue-panel-content {
+  width: 360px;
+  height: 100%;
+  background: var(--bg-elevated);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-left: 1px solid var(--border-color-light);
+  display: flex;
+  flex-direction: column;
+}
+
+.queue-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color-light);
+}
+
+.queue-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.queue-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.queue-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.queue-item:hover {
+  background: var(--glass-bg);
+}
+
+.queue-item-active {
+  background: var(--glass-bg-heavy);
+}
+
+.queue-item-active .queue-name {
+  color: var(--accent-primary);
+}
+
+.queue-remove-btn {
+  background: none;
+  border: none;
+  color: var(--text-quaternary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.queue-item:hover .queue-remove-btn {
+  opacity: 1;
+}
+
+.queue-remove-btn:hover {
+  color: #ff3b30;
+  background: rgba(255, 59, 48, 0.1);
+}
+
+.queue-index {
+  width: 24px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.queue-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.queue-name {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue-artist {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
