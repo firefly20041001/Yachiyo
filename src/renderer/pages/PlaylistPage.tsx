@@ -10,7 +10,7 @@ import { SyncedPlaylist } from '@shared/types/playlist'
 
 export function PlaylistPage() {
   const { playlists, isLoading, refreshPlaylists, deletePlaylist } = usePlaylistStore()
-  const { playQueue } = usePlayback()
+  const { playAll, playQueue } = usePlayback()
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string | null>(null)
   const [playlistTracks, setPlaylistTracks] = useState<Track[]>([])
   const [loadingTracks, setLoadingTracks] = useState(false)
@@ -36,7 +36,7 @@ export function PlaylistPage() {
   }
 
   const handlePlayAll = () => {
-    if (playlistTracks.length > 0) playQueue(playlistTracks)
+    if (playlistTracks.length > 0) playAll(playlistTracks)
   }
 
   const handleBack = () => {

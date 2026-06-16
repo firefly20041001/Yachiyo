@@ -1,15 +1,22 @@
 import { useCallback } from 'react'
 import { usePlaybackStore } from '../stores/playbackStore'
 import { Track } from '@shared/types/streaming'
-import { playTrack, playQueue, togglePlay as toggle, pause as pauseAudio, seek as seekAudio, setVolume as setVol, nextTrack as next, prevTrack as prev } from '../utils/audio'
+import { playTrack, playSingleTrack, playQueue, playFromList, togglePlay as toggle, pause as pauseAudio, seek as seekAudio, setVolume as setVol, nextTrack as next, prevTrack as prev } from '../utils/audio'
 
 export function usePlayback() {
   const store = usePlaybackStore()
 
+  // Single track click - shows VIP alert
   const playTrackFn = useCallback(async (track: Track) => {
-    await playTrack(track)
+    await playSingleTrack(track)
   }, [])
 
+  // Click a track in a list - shows VIP alert
+  const playFromListFn = useCallback(async (tracks: Track[], startIndex = 0) => {
+    await playFromList(tracks, startIndex)
+  }, [])
+
+  // Play all button - skips VIP silently
   const playQueueFn = useCallback(async (tracks: Track[], startIndex = 0) => {
     await playQueue(tracks, startIndex)
   }, [])
@@ -24,7 +31,8 @@ export function usePlayback() {
   return {
     ...store,
     playTrack: playTrackFn,
-    playQueue: playQueueFn,
+    playQueue: playFromListFn, // Default for list clicks
+    playAll: playQueueFn,      // For "play all" buttons
     togglePlay,
     pause,
     seek,

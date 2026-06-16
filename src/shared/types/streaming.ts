@@ -12,6 +12,7 @@ export interface Track {
   albumCoverUrl: string
   duration: number // milliseconds
   quality?: QualityLevel
+  vip?: boolean
   // Cross-platform mapping
   mappedTrackId?: string
   mappedSource?: MusicSource

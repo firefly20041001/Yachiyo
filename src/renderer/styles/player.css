@@ -184,9 +184,12 @@
 .player-controls {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 16px;
   position: relative;
   z-index: 20;
+  flex: 1;
+  min-width: 200px;
 }
 
 .control-btn {

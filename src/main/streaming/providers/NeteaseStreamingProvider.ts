@@ -61,6 +61,8 @@ export class NeteaseStreamingProvider extends StreamingProvider {
   source: MusicSource = 'netease'
 
   private mapTrack(song: any): Track {
+    // NetEase fee: 0=free, 1=VIP, 4=paid album, 8=free with login
+    const isVip = song.fee === 1 || song.fee === 4
     return {
       id: String(song.id),
       source: 'netease',
@@ -69,7 +71,8 @@ export class NeteaseStreamingProvider extends StreamingProvider {
       albumName: song.al?.name || song.album?.name || '',
       albumId: String(song.al?.id || song.album?.id || ''),
       albumCoverUrl: song.al?.picUrl || song.album?.picUrl || '',
-      duration: song.dt || song.duration || 0
+      duration: song.dt || song.duration || 0,
+      vip: isVip
     }
   }
 

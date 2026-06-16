@@ -76,6 +76,11 @@ export class QQMusicStreamingProvider extends StreamingProvider {
   private mapTrack(song: any): Track {
     const mid = song.mid || song.songmid || ''
     const albumMid = song.album?.mid || song.albummid || ''
+    // QQ Music VIP: check action.switch or pay fields
+    const actionSwitch = song.action?.switch || 0
+    const payPlay = song.pay?.play ?? -1
+    // switch=16 or pay.play=0 means VIP only
+    const isVip = actionSwitch === 16 || payPlay === 0
     return {
       id: mid || String(song.id || song.songid || ''),
       source: 'qqmusic',
@@ -84,7 +89,8 @@ export class QQMusicStreamingProvider extends StreamingProvider {
       albumName: song.album?.name || song.albumname || '',
       albumId: albumMid,
       albumCoverUrl: albumMid ? `https://y.gtimg.cn/music/photo_new/T002R300x300M000${albumMid}.jpg` : '',
-      duration: (song.interval || 0) * 1000
+      duration: (song.interval || 0) * 1000,
+      vip: isVip
     }
   }
 

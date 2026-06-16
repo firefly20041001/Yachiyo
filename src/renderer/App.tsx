@@ -8,6 +8,7 @@ import { AccountPage } from './pages/AccountPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { HistoryPage } from './pages/HistoryPage'
 import { useAccountStore } from './stores/accountStore'
+import { usePlaylistStore } from './stores/playlistStore'
 import { useUIStore } from './stores/uiStore'
 import { usePlaybackStore } from './stores/playbackStore'
 import { initAudio, togglePlay, nextTrack, prevTrack, setVolume } from './utils/audio'
@@ -60,7 +61,10 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
 
-  useEffect(() => { refreshAccounts() }, [])
+  useEffect(() => {
+    refreshAccounts()
+    usePlaylistStore.getState().refreshPlaylists()
+  }, [])
 
   const renderPage = () => {
     switch (activePage) {
