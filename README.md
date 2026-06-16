@@ -50,12 +50,6 @@ Yachiyo 是一款现代化跨平台音乐播放器，旨在提供优雅、统一
 
 ### 设置页面
 
-> 请将截图放入：
-
-```text
-docs/screenshots/settings.png
-```
-
 <p align="center">
   <img src="docs/screenshots/settings.png" width="90%">
 </p>
