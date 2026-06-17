@@ -47,10 +47,8 @@ function saveState(state: Partial<PlaybackState>) {
 function addToHistory(track: Track) {
   try {
     const history = JSON.parse(localStorage.getItem('playHistory') || '[]') as Array<{ track: Track; playedAt: number }>
-    // Remove duplicate track (same id + source), keep only the latest
     const filtered = history.filter(h => !(h.track.id === track.id && h.track.source === track.source))
     filtered.unshift({ track, playedAt: Date.now() })
-    // Limit to 100 entries
     if (filtered.length > 100) filtered.length = 100
     localStorage.setItem('playHistory', JSON.stringify(filtered))
   } catch {}

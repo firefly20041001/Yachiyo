@@ -903,7 +903,7 @@
   border-radius: 8px;
   color: var(--text-primary);
   font-size: 13px;
-  font-family: monospace;
+  font-family: 'YouYuan', '幼圆', monospace;
   cursor: pointer;
   transition: all 0.2s;
   text-align: center;
@@ -1016,6 +1016,15 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.fullscreen-lyrics-cover.spinning {
+  animation: discSpin 20s linear infinite;
+}
+
+@keyframes discSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .fullscreen-lyrics-cover-placeholder {

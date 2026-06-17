@@ -70,23 +70,13 @@ export function TrackItem({ track, index, onPlay, onDelete, showIndex = true, sh
             <ListPlus size={14} />
           </button>
           {menuOpen && (
-            <div
-              className="add-to-playlist-menu"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="add-to-playlist-menu" onClick={(e) => e.stopPropagation()}>
               <div className="add-menu-title">添加到歌单</div>
               {playlists.length === 0 ? (
-                <div className="add-menu-empty">暂无歌单，请先导入</div>
+                <div className="add-menu-empty">暂无歌单</div>
               ) : (
                 playlists.map((p) => (
-                  <button
-                    key={p.id}
-                    className="add-menu-item"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleAdd(p.id)
-                    }}
-                  >
+                  <button key={p.id} className="add-menu-item" onClick={(e) => { e.stopPropagation(); handleAdd(p.id) }}>
                     {addedId === p.id ? <><Check size={14} /> 已添加</> : p.name}
                   </button>
                 ))
@@ -95,10 +85,7 @@ export function TrackItem({ track, index, onPlay, onDelete, showIndex = true, sh
           )}
         </div>
         {onDelete && (
-          <button
-            className="track-action-btn"
-            onClick={(e) => { e.stopPropagation(); onDelete(track) }}
-          >
+          <button className="track-action-btn" onClick={(e) => { e.stopPropagation(); onDelete(track) }}>
             <Trash2 size={14} />
           </button>
         )}

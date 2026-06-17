@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useRef, useState, useEffect } from 'react'
 
 interface ProgressBarProps {
   currentTime: number
@@ -27,32 +27,37 @@ export function ProgressBar({ currentTime, duration, onSeek }: ProgressBarProps)
     [duration]
   )
 
+  // Global mouse handlers for dragging
+  useEffect(() => {
+    if (!isDragging) return
+
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      const time = getTimeFromPosition(e.clientX)
+      setDragTime(time)
+    }
+
+    const handleGlobalMouseUp = (e: MouseEvent) => {
+      setIsDragging(false)
+      const time = getTimeFromPosition(e.clientX)
+      onSeek(time)
+    }
+
+    document.addEventListener('mousemove', handleGlobalMouseMove)
+    document.addEventListener('mouseup', handleGlobalMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove)
+      document.removeEventListener('mouseup', handleGlobalMouseUp)
+    }
+  }, [isDragging, getTimeFromPosition, onSeek])
+
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
+      e.preventDefault()
       setIsDragging(true)
       const time = getTimeFromPosition(e.clientX)
       setDragTime(time)
     },
     [getTimeFromPosition]
-  )
-
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      if (!isDragging) return
-      const time = getTimeFromPosition(e.clientX)
-      setDragTime(time)
-    },
-    [isDragging, getTimeFromPosition]
-  )
-
-  const handleMouseUp = useCallback(
-    (e: React.MouseEvent) => {
-      if (!isDragging) return
-      setIsDragging(false)
-      const time = getTimeFromPosition(e.clientX)
-      onSeek(time)
-    },
-    [isDragging, getTimeFromPosition, onSeek]
   )
 
   const handleClick = useCallback(
@@ -74,9 +79,6 @@ export function ProgressBar({ currentTime, duration, onSeek }: ProgressBarProps)
         className="progress-bar"
         ref={barRef}
         onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={() => isDragging && setIsDragging(false)}
         onClick={handleClick}
       >
         <div className="progress-bar-bg" />

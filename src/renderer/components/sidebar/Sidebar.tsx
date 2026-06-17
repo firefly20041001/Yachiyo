@@ -52,11 +52,11 @@ export function Sidebar({ onNavigate, activePage }: SidebarProps) {
       {!sidebarCollapsed && (
         <div className="sidebar-accounts">
           <div className="account-status">
-            <div className={`account-dot ${accounts.netease ? 'account-dot-active' : ''}`} />
+            <div className={`account-dot ${accounts.netease ? 'account-dot-active netease' : ''}`} />
             <span>网易云</span>
           </div>
           <div className="account-status">
-            <div className={`account-dot ${accounts.qqmusic ? 'account-dot-active' : ''}`} />
+            <div className={`account-dot ${accounts.qqmusic ? 'account-dot-active qqmusic' : ''}`} />
             <span>QQ音乐</span>
           </div>
         </div>

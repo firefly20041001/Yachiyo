@@ -31,7 +31,7 @@ export async function playTrack(track: Track) {
   try {
     audio.pause()
 
-    // Clear old lyrics immediately when switching tracks
+    // Clear old lyrics
     usePlaybackStore.getState().setLyrics(null)
     lastLyricIndex = -1
     try { window.api.lyricsWindow.updateLine('', '') } catch {}
@@ -61,22 +61,21 @@ export async function playTrack(track: Track) {
       if (lyrics) usePlaybackStore.getState().setLyrics(lyrics)
     } catch {}
   } catch {
-    // If playing from queue, skip silently. If single play, show alert.
     if (isQueuePlay) {
-      skipToNextSilent()
+      // Skip to next silently
+      const { queue, queueIndex } = usePlaybackStore.getState()
+      if (queue.length > 1) {
+        const nextIndex = (queueIndex + 1) % queue.length
+        if (nextIndex !== queueIndex) {
+          usePlaybackStore.getState().setQueue(queue, nextIndex)
+          playTrack(queue[nextIndex])
+          return
+        }
+      }
     } else {
       showVipAlert(track.name, track.source)
     }
   }
-}
-
-function skipToNextSilent() {
-  const { queue, queueIndex } = usePlaybackStore.getState()
-  if (queue.length <= 1) return
-  const nextIndex = (queueIndex + 1) % queue.length
-  if (nextIndex === queueIndex) return
-  usePlaybackStore.getState().setQueue(queue, nextIndex)
-  playTrack(queue[nextIndex])
 }
 
 export function initAudio() {
@@ -86,6 +85,7 @@ export function initAudio() {
   audio.addEventListener('timeupdate', () => {
     usePlaybackStore.getState().setCurrentTime(audio.currentTime)
 
+    // Update lyric index
     const { lyrics } = usePlaybackStore.getState()
     if (lyrics?.lines.length) {
       let index = -1
@@ -97,11 +97,9 @@ export function initAudio() {
       }
     }
 
+    // Update floating lyrics
     const { lyrics: l, currentLyricIndex } = usePlaybackStore.getState()
     if (l && currentLyricIndex >= 0) {
-      if (currentLyricIndex !== lastLyricIndex) {
-        lastLyricIndex = currentLyricIndex
-      }
       const line = l.lines[currentLyricIndex]
       if (line) {
         try { window.api.lyricsWindow.updateLine(line.text, line.translation) } catch {}
@@ -122,25 +120,23 @@ export function initAudio() {
   })
 
   audio.addEventListener('ended', () => {
-    const { queue, queueIndex, playMode } = usePlaybackStore.getState()
-    if (queue.length === 0) return
-
-    let nextIndex: number
-    if (playMode === 'shuffle') nextIndex = Math.floor(Math.random() * queue.length)
-    else if (playMode === 'single') nextIndex = queueIndex
-    else nextIndex = (queueIndex + 1) % queue.length
-
-    const nextTrack = queue[nextIndex]
-    if (nextTrack) {
+    const state = usePlaybackStore.getState()
+    state.nextTrack()
+    const newState = usePlaybackStore.getState()
+    if (newState.currentTrack) {
       isQueuePlay = true
-      usePlaybackStore.getState().setQueue(queue, nextIndex)
-      playTrack(nextTrack)
+      playTrack(newState.currentTrack)
     }
   })
 
   audio.addEventListener('error', () => {
     if (isQueuePlay) {
-      skipToNextSilent()
+      const state = usePlaybackStore.getState()
+      state.nextTrack()
+      const newState = usePlaybackStore.getState()
+      if (newState.currentTrack) {
+        playTrack(newState.currentTrack)
+      }
     } else {
       const track = usePlaybackStore.getState().currentTrack
       if (track) showVipAlert(track.name, track.source)
@@ -164,12 +160,6 @@ export function togglePlay() {
   }
 }
 
-// Play a single track (not from queue) - shows VIP alert on failure
-export async function playSingleTrack(track: Track) {
-  isQueuePlay = false
-  await playTrack(track)
-}
-
 export function pause() {
   audio.pause()
 }
@@ -183,27 +173,23 @@ export function setVolume(volume: number) {
 }
 
 export function nextTrack() {
-  const { queue, queueIndex, playMode } = usePlaybackStore.getState()
-  if (queue.length === 0) return
-
-  let nextIndex: number
-  if (playMode === 'shuffle') nextIndex = Math.floor(Math.random() * queue.length)
-  else if (playMode === 'single') nextIndex = queueIndex
-  else nextIndex = (queueIndex + 1) % queue.length
-
-  isQueuePlay = true
-  usePlaybackStore.getState().setQueue(queue, nextIndex)
-  playTrack(queue[nextIndex])
+  const state = usePlaybackStore.getState()
+  state.nextTrack()
+  const newState = usePlaybackStore.getState()
+  if (newState.currentTrack) {
+    isQueuePlay = true
+    playTrack(newState.currentTrack)
+  }
 }
 
 export function prevTrack() {
-  const { queue, queueIndex } = usePlaybackStore.getState()
-  if (queue.length === 0) return
-
-  const prevIndex = queueIndex <= 0 ? queue.length - 1 : queueIndex - 1
-  isQueuePlay = true
-  usePlaybackStore.getState().setQueue(queue, prevIndex)
-  playTrack(queue[prevIndex])
+  const state = usePlaybackStore.getState()
+  state.prevTrack()
+  const newState = usePlaybackStore.getState()
+  if (newState.currentTrack) {
+    isQueuePlay = true
+    playTrack(newState.currentTrack)
+  }
 }
 
 export async function playQueue(tracks: Track[], startIndex = 0) {
@@ -212,9 +198,39 @@ export async function playQueue(tracks: Track[], startIndex = 0) {
   await playTrack(tracks[startIndex])
 }
 
-// Play from a list but treat as single click (show VIP alert on failure)
 export async function playFromList(tracks: Track[], startIndex = 0) {
   isQueuePlay = false
   usePlaybackStore.getState().setQueue(tracks, startIndex)
   await playTrack(tracks[startIndex])
+}
+
+export async function playSingleTrack(track: Track) {
+  isQueuePlay = false
+  await playTrack(track)
+}
+
+export function setPriorityNext(track: Track) {
+  const { queue, queueIndex } = usePlaybackStore.getState()
+  const filtered = queue.filter(t => !(t.id === track.id && t.source === track.source))
+  const insertAt = Math.min(queueIndex + 1, filtered.length)
+  filtered.splice(insertAt, 0, track)
+  usePlaybackStore.getState().setQueue(filtered, queueIndex)
+}
+
+export function stopAndClear() {
+  audio.pause()
+  audio.removeAttribute('src')
+  audio.load()
+  usePlaybackStore.setState({
+    currentTrack: null,
+    isPlaying: false,
+    currentTime: 0,
+    duration: 0,
+    lyrics: null,
+    queue: [],
+    queueIndex: -1,
+    playbackInfo: null,
+    currentLyricIndex: -1
+  })
+  localStorage.removeItem('playbackState')
 }

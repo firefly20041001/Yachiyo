@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { ListMusic, Music, X, ListPlus, Check } from 'lucide-react'
+import { ListMusic, Music, X, ListPlus, Check, Trash2 } from 'lucide-react'
+import { stopAndClear } from '../../utils/audio'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { usePlaylistStore } from '../../stores/playlistStore'
 import { PlayerControls } from './PlayerControls'
@@ -89,7 +90,14 @@ export function PlayerBar() {
           <div className="queue-panel-content" onClick={(e) => e.stopPropagation()}>
             <div className="queue-header">
               <h3>播放队列 ({queue.length})</h3>
-              <button className="btn btn-ghost btn-sm" onClick={() => setShowQueue(false)}>关闭</button>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {queue.length > 0 && (
+                  <button className="btn btn-ghost btn-sm" onClick={() => stopAndClear()}>
+                    <Trash2 size={14} /> 清空
+                  </button>
+                )}
+                <button className="btn btn-ghost btn-sm" onClick={() => setShowQueue(false)}>关闭</button>
+              </div>
             </div>
             <div className="queue-list" ref={queueListRef}>
               {queue.map((track, index) => (

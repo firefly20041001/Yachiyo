@@ -40,6 +40,7 @@
   -webkit-app-region: no-drag;
   position: relative;
   z-index: 100;
+  background: transparent;
 }
 
 .title-bar-drag {
@@ -90,6 +91,13 @@
   display: flex;
   overflow: hidden;
   position: relative;
+}
+
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .main-content {

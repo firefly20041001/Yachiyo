@@ -65,16 +65,13 @@
   pointer-events: none;
 }
 
-.progress-bar {
-  pointer-events: auto;
-}
-
 .progress-time {
   font-size: 11px;
   color: var(--text-tertiary);
   min-width: 36px;
   text-align: center;
   font-variant-numeric: tabular-nums;
+  pointer-events: none;
 }
 
 .progress-bar {
@@ -85,6 +82,7 @@
   cursor: pointer;
   position: relative;
   transition: height 0.15s;
+  pointer-events: auto;
 }
 
 .progress-bar:hover {
