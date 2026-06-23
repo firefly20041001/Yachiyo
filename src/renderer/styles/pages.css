@@ -174,12 +174,20 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
 }
 
 .track-cover-placeholder {
   width: 100%;
   height: 100%;
   background: var(--glass-bg-heavy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-quaternary);
 }
 
 .track-play-overlay {
@@ -268,7 +276,8 @@
   transition: opacity 0.15s;
 }
 
-.track-item:hover .track-item-actions {
+.track-item:hover .track-item-actions,
+.track-item-actions-visible {
   opacity: 1;
 }
 

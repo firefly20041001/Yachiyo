@@ -11,13 +11,14 @@ import { useAccountStore } from './stores/accountStore'
 import { usePlaylistStore } from './stores/playlistStore'
 import { useUIStore } from './stores/uiStore'
 import { usePlaybackStore } from './stores/playbackStore'
-import { initAudio, togglePlay, nextTrack, prevTrack, setVolume } from './utils/audio'
+import { initAudio, restoreLastTrack, togglePlay, nextTrack, prevTrack, setVolume } from './utils/audio'
 
 function TrayAndShortcutHandler() {
   const currentTrack = usePlaybackStore((s) => s.currentTrack)
 
   useEffect(() => {
     initAudio()
+    restoreLastTrack()
   }, [])
 
   useEffect(() => {

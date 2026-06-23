@@ -161,10 +161,15 @@ export class PlaylistService {
 
   async addTrack(playlistId: string, track: Track): Promise<void> {
     const record = playlistDB.get(playlistId)
-    if (!record) return
+    if (!record) {
+      console.log('[Playlist] addTrack: playlist not found:', playlistId)
+      return
+    }
 
-    const exists = record.tracks.some((t) => t.trackId === track.id && t.trackSource === track.source)
-    if (exists) return
+    console.log('[Playlist] addTrack:', track.name, 'to', record.name, 'tracks count:', record.tracks.length)
+
+    // Remove existing entry if present, then add to top
+    record.tracks = record.tracks.filter((t) => !(t.trackId === track.id && t.trackSource === track.source))
 
     record.tracks.unshift({
       trackId: track.id,
@@ -178,14 +183,23 @@ export class PlaylistService {
       addedAt: Date.now()
     })
 
+    console.log('[Playlist] addTrack: done, new count:', record.tracks.length)
     playlistDB.set(playlistId, record)
   }
 
   async removeTrack(playlistId: string, trackId: string): Promise<void> {
     const record = playlistDB.get(playlistId)
-    if (!record) return
+    if (!record) {
+      console.log('[Playlist] removeTrack: playlist not found:', playlistId)
+      return
+    }
 
+    const beforeCount = record.tracks.length
+    console.log('[Playlist] removeTrack: looking for trackId:', trackId, 'in', beforeCount, 'tracks')
+    console.log('[Playlist] existing trackIds:', record.tracks.map(t => t.trackId).slice(0, 5))
     record.tracks = record.tracks.filter((t) => t.trackId !== trackId)
+    const afterCount = record.tracks.length
+    console.log('[Playlist] removeTrack result: before:', beforeCount, 'after:', afterCount)
     playlistDB.set(playlistId, record)
   }
 

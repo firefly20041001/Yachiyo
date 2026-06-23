@@ -18,6 +18,8 @@ export function SettingsPage() {
   const [closeAction, setCloseAction] = useState('minimize')
   const [shortcuts, setShortcuts] = useState<Record<string, string>>({})
   const [editingKey, setEditingKey] = useState<string | null>(null)
+  const [checkingUpdate, setCheckingUpdate] = useState(false)
+  const [updateStatus, setUpdateStatus] = useState('')
   const [lyrics, setLyrics] = useState({
     enabled: false, fontSize: 28, fontFamily: 'PingFang SC', color: '#ffffff',
     bgColor: 'rgba(0,0,0,0.3)', opacity: 0.9, translationEnabled: true,
@@ -70,6 +72,29 @@ export function SettingsPage() {
   const handleResetShortcuts = async () => {
     const defaults = await window.api.shortcuts.reset()
     setShortcuts(defaults)
+  }
+
+  const CURRENT_VERSION = '1.0.3'
+
+  const handleCheckUpdate = async () => {
+    setCheckingUpdate(true)
+    setUpdateStatus('检查中...')
+    try {
+      const res = await fetch('https://api.github.com/repos/firefly20041001/yachiyo/releases/latest')
+      const data = await res.json()
+      const latestVersion = (data.tag_name || '').replace('v', '').replace('V', '')
+
+      if (latestVersion && latestVersion !== CURRENT_VERSION) {
+        setUpdateStatus(`发现新版本 v${latestVersion}`)
+        window.open(data.html_url)
+      } else {
+        setUpdateStatus('已是最新版本')
+      }
+    } catch {
+      setUpdateStatus('检查失败，请稍后重试')
+    } finally {
+      setCheckingUpdate(false)
+    }
   }
 
   const handleCloseActionChange = async (action: string) => {
@@ -210,12 +235,6 @@ export function SettingsPage() {
                     {lyrics.textShadow ? '开启' : '关闭'}
                   </button>
                 </div>
-                <div className="setting-item">
-                  <div className="setting-label"><span>显示翻译</span></div>
-                  <button className={`theme-btn ${lyrics.translationEnabled ? 'theme-btn-active' : ''}`} onClick={() => updateLyrics('translationEnabled', !lyrics.translationEnabled)}>
-                    {lyrics.translationEnabled ? '开启' : '关闭'}
-                  </button>
-                </div>
               </>
             )}
           </div>
@@ -239,8 +258,17 @@ export function SettingsPage() {
         <GlassPanel intensity="medium" className="settings-section">
           <h2 className="settings-section-title"><Info size={20} /> 关于</h2>
           <div className="settings-group">
-            <div className="setting-item"><div className="setting-label"><span>版本</span></div><span className="setting-value">1.0.2</span></div>
+            <div className="setting-item"><div className="setting-label"><span>版本</span></div><span className="setting-value">1.0.3</span></div>
             <div className="setting-item"><div className="setting-label"><span>技术栈</span></div><span className="setting-value">Electron + React + TypeScript</span></div>
+            <div className="setting-item">
+              <div className="setting-label">
+                <span>检查更新</span>
+                <span className="setting-desc">{updateStatus}</span>
+              </div>
+              <button className="btn btn-primary" onClick={handleCheckUpdate} disabled={checkingUpdate}>
+                {checkingUpdate ? '检查中...' : '检查更新'}
+              </button>
+            </div>
           </div>
         </GlassPanel>
       </div>

@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { createMainWindow } from './app/window'
 import { createTray, destroyTray, updateTrayTrackInfo } from './app/tray'
 import { registerAllIPC } from './ipc'
-import { registerLyricsIPC, updateLyricsWindow, toggleLyricsWindow } from './app/lyricsWindow'
+import { registerLyricsIPC, updateLyricsWindow, toggleLyricsWindow, createLyricsWindow } from './app/lyricsWindow'
 import { registerShortcuts, unregisterShortcuts } from './app/shortcuts'
 import { settingsDB } from './database'
 
@@ -63,6 +63,12 @@ if (!gotTheLock) {
 
     mainWindow = createMainWindow()
     createTray()
+
+    // Restore floating lyrics if it was enabled
+    const lyricsEnabled = settingsDB.get('lyrics.enabled', false)
+    if (lyricsEnabled) {
+      createLyricsWindow()
+    }
 
     // Register global shortcuts
     registerShortcuts((channel: string, ...args: any[]) => {

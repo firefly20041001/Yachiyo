@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
-import { Play, Trash2, ListPlus, Check } from 'lucide-react'
+import { Play, Trash2, ListPlus, Check, Music, PlayCircle } from 'lucide-react'
 import { Track } from '@shared/types/streaming'
 import { SourceBadge } from './SourceBadge'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { usePlaylistStore } from '../../stores/playlistStore'
+import { addToPlayQueue } from '../../utils/audio'
 
 interface TrackItemProps {
   track: Track
@@ -21,6 +22,7 @@ export function TrackItem({ track, index, onPlay, onDelete, showIndex = true, sh
   const playlists = usePlaylistStore((s) => s.playlists)
   const [menuOpen, setMenuOpen] = useState(false)
   const [addedId, setAddedId] = useState<string | null>(null)
+  const [playNextDone, setPlayNextDone] = useState(false)
 
   const formatDuration = (ms: number) => {
     const s = Math.floor(ms / 1000)
@@ -28,9 +30,28 @@ export function TrackItem({ track, index, onPlay, onDelete, showIndex = true, sh
   }
 
   const handleAdd = async (playlistId: string) => {
-    await window.api.playlist.addTrack(playlistId, track)
-    setAddedId(playlistId)
-    setTimeout(() => { setAddedId(null); setMenuOpen(false) }, 800)
+    try {
+      await window.api.playlist.addTrack(playlistId, track)
+      setAddedId(playlistId)
+      setTimeout(() => { setAddedId(null); setMenuOpen(false) }, 800)
+    } catch (err) {
+      console.error('Failed to add track:', err)
+    }
+  }
+
+  const handlePlayNext = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    addToPlayQueue(track)
+    setPlayNextDone(true)
+    setTimeout(() => { setPlayNextDone(false); setMenuOpen(false) }, 800)
+  }
+
+  const handleMenuOpen = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!menuOpen) {
+      usePlaylistStore.getState().refreshPlaylists()
+    }
+    setMenuOpen(!menuOpen)
   }
 
   return (
@@ -44,7 +65,10 @@ export function TrackItem({ track, index, onPlay, onDelete, showIndex = true, sh
       </div>
 
       <div className="track-item-cover">
-        {track.albumCoverUrl ? <img src={track.albumCoverUrl} alt="" /> : <div className="track-cover-placeholder" />}
+        {track.albumCoverUrl ? (
+          <img src={track.albumCoverUrl} alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+        ) : null}
+        <div className="track-cover-placeholder"><Music size={16} /></div>
         <div className="track-play-overlay"><Play size={16} fill="white" /></div>
       </div>
 
@@ -58,25 +82,27 @@ export function TrackItem({ track, index, onPlay, onDelete, showIndex = true, sh
       <div className="track-item-album">{track.albumName}</div>
       <div className="track-item-duration">{formatDuration(track.duration)}</div>
 
-      <div className="track-item-actions">
+      <div className={`track-item-actions ${menuOpen ? 'track-item-actions-visible' : ''}`}>
         <div style={{ position: 'relative' }}>
-          <button
-            className="track-action-btn"
-            onClick={(e) => {
-              e.stopPropagation()
-              setMenuOpen(!menuOpen)
-            }}
-          >
+          <button className="track-action-btn" onClick={handleMenuOpen}>
             <ListPlus size={14} />
           </button>
           {menuOpen && (
-            <div className="add-to-playlist-menu" onClick={(e) => e.stopPropagation()}>
+            <div className="add-to-playlist-menu" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+              <button className="add-menu-item" onMouseDown={(e) => e.stopPropagation()} onClick={handlePlayNext}>
+                {playNextDone ? <><Check size={14} /> 已添加</> : <><PlayCircle size={14} /> 下一首播放</>}
+              </button>
               <div className="add-menu-title">添加到歌单</div>
               {playlists.length === 0 ? (
                 <div className="add-menu-empty">暂无歌单</div>
               ) : (
                 playlists.map((p) => (
-                  <button key={p.id} className="add-menu-item" onClick={(e) => { e.stopPropagation(); handleAdd(p.id) }}>
+                  <button
+                    key={p.id}
+                    className="add-menu-item"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleAdd(p.id) }}
+                  >
                     {addedId === p.id ? <><Check size={14} /> 已添加</> : p.name}
                   </button>
                 ))
