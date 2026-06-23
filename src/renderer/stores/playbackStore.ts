@@ -22,12 +22,16 @@ interface PlaybackState {
   // Play queue (priority queue, consumed first)
   playQueue: Track[]
 
+  // Track which page/context the song was played from
+  playSource: { page: string; id?: string } | null
+
   // Lyrics
   lyrics: Lyrics | null
   currentLyricIndex: number
 
   // Actions
   setCurrentTrack: (track: Track | null) => void
+  setPlaySource: (source: { page: string; id?: string } | null) => void
   setPlaybackInfo: (info: PlaybackInfo) => void
   setIsPlaying: (playing: boolean) => void
   setCurrentTime: (time: number) => void
@@ -120,6 +124,7 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   currentIndex: saved?.currentIndex ?? -1,
   playQueue: saved?.playQueue || [],
 
+  playSource: saved?.playSource || null,
   lyrics: null,
   currentLyricIndex: -1,
 
@@ -127,6 +132,11 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     set({ currentTrack: track, currentTime: 0, duration: track ? track.duration / 1000 : 0 })
     if (track) addToHistory(track)
     persist({ currentTrack: track })
+  },
+
+  setPlaySource: (source) => {
+    set({ playSource: source })
+    persist({ playSource: source as any })
   },
   setPlaybackInfo: (info) => set({ playbackInfo: info }),
   setIsPlaying: (playing) => set({ isPlaying: playing }),

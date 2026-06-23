@@ -22,7 +22,7 @@ export function SearchPage() {
   }
 
   const handlePlayTrack = (track: any, index: number) => {
-    if (results?.tracks) playQueue(results.tracks, index)
+    if (results?.tracks) playQueue(results.tracks, index, { page: 'search' })
   }
 
   const handlePlayToplist = (track: Track, index: number) => {

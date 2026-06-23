@@ -137,32 +137,33 @@ export function initAudio() {
   })
 }
 
-export function playSingleTrack(track: Track) {
+export function playSingleTrack(track: Track, source?: { page: string; id?: string }) {
   const store = usePlaybackStore.getState()
-  // Set as current playlist context
   if (store.playlist.length === 0) {
     store.setPlaylist([track], 0)
   }
   store.setCurrentTrack(track)
+  if (source) store.setPlaySource(source)
   loadAndPlay(track).catch((err) => {
     console.error('[Playback] Failed:', err.message)
     showVipAlert(track.name, track.source)
   })
 }
 
-export function playFromList(tracks: Track[], startIndex = 0) {
+export function playFromList(tracks: Track[], startIndex = 0, source?: { page: string; id?: string }) {
   const store = usePlaybackStore.getState()
   store.setPlaylist(tracks, startIndex)
+  if (source) store.setPlaySource(source)
   loadAndPlay(tracks[startIndex]).catch((err) => {
     console.error('[Playback] Failed:', err.message)
     showVipAlert(tracks[startIndex].name, tracks[startIndex].source)
   })
 }
 
-export function playQueue(tracks: Track[], startIndex = 0) {
-  // "Play All" - skip VIP silently
+export function playQueue(tracks: Track[], startIndex = 0, source?: { page: string; id?: string }) {
   const store = usePlaybackStore.getState()
   store.setPlaylist(tracks, startIndex)
+  if (source) store.setPlaySource(source)
   loadAndPlay(tracks[startIndex]).catch(() => {
     const next = usePlaybackStore.getState().advanceToNext()
     if (next) loadAndPlay(next).catch(() => {})

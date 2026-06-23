@@ -75,7 +75,7 @@ export function HistoryPage() {
           </p>
           <TrackList
             tracks={tracks}
-            onPlay={(track, index) => playQueue(tracks, index)}
+            onPlay={(track, index) => playQueue(tracks, index, { page: 'history' })}
           />
         </div>
       )}

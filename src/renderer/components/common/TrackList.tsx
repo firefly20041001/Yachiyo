@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { Track } from '@shared/types/streaming'
 import { TrackItem } from './TrackItem'
 
@@ -12,6 +12,8 @@ interface TrackListProps {
 }
 
 export function TrackList({ tracks, onPlay, onDelete, showIndex = true, showSource = true, showHeader = true }: TrackListProps) {
+  const bodyRef = useRef<HTMLDivElement>(null)
+
   return (
     <div className="track-list">
       {showHeader && (
@@ -25,7 +27,7 @@ export function TrackList({ tracks, onPlay, onDelete, showIndex = true, showSour
           <div className="track-header-actions" />
         </div>
       )}
-      <div className="track-list-body">
+      <div className="track-list-body" ref={bodyRef}>
         {tracks.map((track, index) => (
           <TrackItem
             key={`${track.source}-${track.id}`}

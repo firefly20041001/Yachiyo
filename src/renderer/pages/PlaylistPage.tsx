@@ -176,7 +176,7 @@ export function PlaylistPage() {
           ) : playlistTracks.length > 0 ? (
             <TrackList
               tracks={playlistTracks}
-              onPlay={(_, index) => playQueue(playlistTracks, index)}
+              onPlay={(_, index) => playQueue(playlistTracks, index, { page: 'playlists', id: selectedPlaylistId || undefined })}
               onDelete={handleDeleteTrack}
             />
           ) : (

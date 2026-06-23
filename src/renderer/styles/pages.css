@@ -130,6 +130,11 @@
   letter-spacing: 0.05em;
 }
 
+.track-header-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .track-list-body {
   display: flex;
   flex-direction: column;

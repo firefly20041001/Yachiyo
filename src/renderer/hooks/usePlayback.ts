@@ -6,16 +6,16 @@ import { playSingleTrack, playFromList, playQueue, togglePlay, pause, seek, setV
 export function usePlayback() {
   const store = usePlaybackStore()
 
-  const playTrackFn = useCallback(async (track: Track) => {
-    playSingleTrack(track)
+  const playTrackFn = useCallback(async (track: Track, source?: { page: string; id?: string }) => {
+    playSingleTrack(track, source)
   }, [])
 
-  const playFromListFn = useCallback(async (tracks: Track[], startIndex = 0) => {
-    playFromList(tracks, startIndex)
+  const playFromListFn = useCallback(async (tracks: Track[], startIndex = 0, source?: { page: string; id?: string }) => {
+    playFromList(tracks, startIndex, source)
   }, [])
 
-  const playQueueFn = useCallback(async (tracks: Track[], startIndex = 0) => {
-    playQueue(tracks, startIndex)
+  const playQueueFn = useCallback(async (tracks: Track[], startIndex = 0, source?: { page: string; id?: string }) => {
+    playQueue(tracks, startIndex, source)
   }, [])
 
   const togglePlayFn = useCallback(() => togglePlay(), [])

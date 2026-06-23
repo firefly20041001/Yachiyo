@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { ListMusic, Music, X, ListPlus, Check, Trash2 } from 'lucide-react'
-import { stopAndClear } from '../../utils/audio'
+import { stopAndClear, addToPlayQueue } from '../../utils/audio'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { usePlaylistStore } from '../../stores/playlistStore'
 import { PlayerControls } from './PlayerControls'
@@ -117,13 +117,40 @@ export function PlayerBar() {
                         <div className="queue-name">{track.name}</div>
                         <div className="queue-artist">{track.artists.join(', ')}</div>
                       </div>
-                      <button
-                        className="queue-remove-btn"
-                        style={{ opacity: 1 }}
-                        onClick={(e) => { e.stopPropagation(); usePlaybackStore.getState().removeFromPlayQueue(index) }}
-                      >
-                        <X size={14} />
-                      </button>
+                      <div style={{ display: 'flex', gap: 2, alignItems: 'center', position: 'relative' }}>
+                        <button
+                          className="queue-remove-btn"
+                          style={{ opacity: 1 }}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setMenuTrack(menuTrack?.id === track.id ? null : track)
+                          }}
+                        >
+                          <ListPlus size={14} />
+                        </button>
+                        <button
+                          className="queue-remove-btn"
+                          style={{ opacity: 1 }}
+                          onClick={(e) => { e.stopPropagation(); usePlaybackStore.getState().removeFromPlayQueue(index) }}
+                        >
+                          <X size={14} />
+                        </button>
+                        {menuTrack?.id === track.id && menuTrack?.source === track.source && (
+                          <div className="add-to-playlist-menu" style={{ position: 'absolute', right: 0, top: '100%', zIndex: 100 }}
+                            onClick={(ev) => ev.stopPropagation()}>
+                            <div className="add-menu-title">添加到歌单</div>
+                            {playlists.length === 0 ? (
+                              <div className="add-menu-empty">暂无歌单</div>
+                            ) : (
+                              playlists.map((p) => (
+                                <button key={p.id} className="add-menu-item" onClick={(e) => handleAddToPlaylist(p.id, e)}>
+                                  {addedId === p.id ? <><Check size={14} /> 已添加</> : p.name}
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -150,6 +177,33 @@ export function PlayerBar() {
                       <div className="queue-info">
                         <div className="queue-name">{track.name}</div>
                         <div className="queue-artist">{track.artists.join(', ')}</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 2, alignItems: 'center', position: 'relative' }}>
+                        <button
+                          className="queue-remove-btn"
+                          style={{ opacity: 1 }}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setMenuTrack(menuTrack?.id === track.id ? null : track)
+                          }}
+                        >
+                          <ListPlus size={14} />
+                        </button>
+                        {menuTrack?.id === track.id && menuTrack?.source === track.source && (
+                          <div className="add-to-playlist-menu" style={{ position: 'absolute', right: 0, top: '100%', zIndex: 100 }}
+                            onClick={(ev) => ev.stopPropagation()}>
+                            <div className="add-menu-title">添加到歌单</div>
+                            {playlists.length === 0 ? (
+                              <div className="add-menu-empty">暂无歌单</div>
+                            ) : (
+                              playlists.map((p) => (
+                                <button key={p.id} className="add-menu-item" onClick={(e) => handleAddToPlaylist(p.id, e)}>
+                                  {addedId === p.id ? <><Check size={14} /> 已添加</> : p.name}
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}

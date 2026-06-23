@@ -1,7 +1,6 @@
 import React from 'react'
 import { Sidebar } from '../components/sidebar/Sidebar'
 import { PlayerBar } from '../components/player/PlayerBar'
-import { useUIStore } from '../stores/uiStore'
 
 interface LayoutProps {
   children: React.ReactNode
