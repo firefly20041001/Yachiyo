@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Moon, Sun, Monitor, Info, X, Type, Eye, EyeOff, Lock, Unlock, Keyboard, RotateCcw } from 'lucide-react'
+import { Moon, Sun, Monitor, Info, X, Type, Eye, EyeOff, Lock, Unlock, Keyboard, RotateCcw, Palette } from 'lucide-react'
 import { useUIStore } from '../stores/uiStore'
 import { GlassPanel } from '../components/common/GlassPanel'
+import { ColorWheel } from '../components/common/ColorWheel'
 
 const ACTION_LABELS: Record<string, string> = {
   togglePlay: '播放/暂停',
@@ -20,6 +21,8 @@ export function SettingsPage() {
   const [editingKey, setEditingKey] = useState<string | null>(null)
   const [checkingUpdate, setCheckingUpdate] = useState(false)
   const [updateStatus, setUpdateStatus] = useState('')
+  const [themeColor, setThemeColor] = useState('#DE89A8')
+  const [showColorWheel, setShowColorWheel] = useState(false)
   const [lyrics, setLyrics] = useState({
     enabled: false, fontSize: 28, fontFamily: 'PingFang SC', color: '#ffffff',
     bgColor: 'rgba(0,0,0,0.3)', opacity: 0.9, translationEnabled: true,
@@ -28,6 +31,7 @@ export function SettingsPage() {
 
   useEffect(() => {
     window.api.settings.get('settings.closeAction', 'minimize').then((v) => setCloseAction(v))
+    window.api.settings.get('settings.themeColor', '#DE89A8').then((v) => setThemeColor(v))
     window.api.lyricsWindow.getSettings().then((s) => setLyrics(prev => ({ ...prev, ...s })))
     window.api.shortcuts.get().then((s) => setShortcuts(s))
 
@@ -69,12 +73,28 @@ export function SettingsPage() {
     return () => window.removeEventListener('keydown', handler)
   }, [editingKey])
 
+  const handleThemeColorChange = async (color: string) => {
+    setThemeColor(color)
+    await window.api.settings.set('settings.themeColor', color)
+    // Apply to CSS variables
+    document.documentElement.style.setProperty('--accent-primary', color)
+    // Darken for pressed state
+    const r = parseInt(color.slice(1, 3), 16)
+    const g = parseInt(color.slice(3, 5), 16)
+    const b = parseInt(color.slice(5, 7), 16)
+    const darker = '#' + [r, g, b].map(c => Math.max(0, c - 30).toString(16).padStart(2, '0')).join('')
+    document.documentElement.style.setProperty('--accent-pressed', darker)
+    // Lighten for hover
+    const lighter = '#' + [r, g, b].map(c => Math.min(255, c + 20).toString(16).padStart(2, '0')).join('')
+    document.documentElement.style.setProperty('--accent-hover', lighter)
+  }
+
   const handleResetShortcuts = async () => {
     const defaults = await window.api.shortcuts.reset()
     setShortcuts(defaults)
   }
 
-  const CURRENT_VERSION = '1.0.4'
+  const CURRENT_VERSION = '1.0.5'
 
   const handleCheckUpdate = async () => {
     setCheckingUpdate(true)
@@ -131,6 +151,19 @@ export function SettingsPage() {
               <div className="theme-selector">
                 <button className={`theme-btn ${theme === 'dark' ? 'theme-btn-active' : ''}`} onClick={() => setTheme('dark')}><Moon size={16} /> 深色</button>
                 <button className={`theme-btn ${theme === 'light' ? 'theme-btn-active' : ''}`} onClick={() => setTheme('light')}><Sun size={16} /> 浅色</button>
+              </div>
+            </div>
+            <div className="setting-item">
+              <div className="setting-label">
+                <span><Palette size={16} style={{ verticalAlign: 'middle', marginRight: 8 }} />主题色</span>
+                <span className="setting-desc">点击颜色打开取色轮盘</span>
+              </div>
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
+                onClick={() => setShowColorWheel(true)}
+              >
+                <div style={{ width: 28, height: 28, borderRadius: 6, background: themeColor, border: '2px solid var(--border-color)' }} />
+                <span style={{ fontSize: 13, fontFamily: 'monospace' }}>{themeColor}</span>
               </div>
             </div>
           </div>
@@ -198,7 +231,7 @@ export function SettingsPage() {
                 <div className="setting-item">
                   <div className="setting-label"><span>歌词颜色</span></div>
                   <div className="theme-selector">
-                    {['#ffffff', '#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff9a9e', '#a18cd1', '#fbc2eb'].map((c) => (
+                    {['#ffffff', '#000000', '#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff9a9e', '#a18cd1', '#fbc2eb'].map((c) => (
                       <button key={c} className={`theme-btn ${lyrics.color === c ? 'theme-btn-active' : ''}`}
                         onClick={() => updateLyrics('color', c)}
                         style={{ width: 28, height: 28, background: c, borderRadius: '50%', border: lyrics.color === c ? '2px solid var(--accent-primary)' : '2px solid transparent' }} />
@@ -258,7 +291,7 @@ export function SettingsPage() {
         <GlassPanel intensity="medium" className="settings-section">
           <h2 className="settings-section-title"><Info size={20} /> 关于</h2>
           <div className="settings-group">
-            <div className="setting-item"><div className="setting-label"><span>版本</span></div><span className="setting-value">1.0.4</span></div>
+            <div className="setting-item"><div className="setting-label"><span>版本</span></div><span className="setting-value">1.0.5</span></div>
             <div className="setting-item"><div className="setting-label"><span>技术栈</span></div><span className="setting-value">Electron + React + TypeScript</span></div>
             <div className="setting-item">
               <div className="setting-label">
@@ -272,6 +305,28 @@ export function SettingsPage() {
           </div>
         </GlassPanel>
       </div>
+
+      {/* Color Wheel Modal */}
+      {showColorWheel && (
+        <div className="modal-overlay" onClick={() => setShowColorWheel(false)}>
+          <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+            <GlassPanel intensity="heavy" className="color-wheel-modal">
+              <h3 style={{ marginBottom: 16, textAlign: 'center' }}>选择主题色</h3>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                <ColorWheel color={themeColor} onChange={handleThemeColorChange} size={220} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 16 }}>
+                <div style={{ width: 24, height: 24, borderRadius: 6, background: themeColor, border: '2px solid var(--border-color)' }} />
+                <span style={{ fontSize: 14, fontFamily: 'monospace' }}>{themeColor}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setShowColorWheel(false)}>确定</button>
+                <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => handleThemeColorChange('#DE89A8')}>恢复默认</button>
+              </div>
+            </GlassPanel>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

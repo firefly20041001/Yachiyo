@@ -95,8 +95,9 @@
   transform: translateY(-50%);
   width: 3px;
   height: 20px;
-  background: var(--accent-primary);
+  background: #DE89A8;
   border-radius: 0 3px 3px 0;
+  box-shadow: 0 0 8px rgba(222, 137, 168, 0.4);
 }
 
 .nav-label {

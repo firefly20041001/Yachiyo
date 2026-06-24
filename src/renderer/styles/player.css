@@ -216,8 +216,12 @@
 }
 
 .play-btn:hover {
-  background: var(--accent-secondary);
+  background: var(--accent-hover);
   transform: scale(1.05);
+}
+
+.play-btn:active {
+  background: var(--accent-pressed);
 }
 
 .mode-btn {
@@ -225,7 +229,7 @@
 }
 
 .mode-btn-active {
-  color: var(--accent-primary);
+  color: #DE89A8;
 }
 
 /* Light variant for lyrics page */

@@ -15,12 +15,14 @@
   --text-tertiary: rgba(255, 255, 255, 0.5);
   --text-quaternary: rgba(255, 255, 255, 0.3);
 
-  --accent-primary: #fa586a;
-  --accent-secondary: #ff2d55;
+  --accent-primary: #DE89A8;
+  --accent-secondary: #D46F95;
   --accent-blue: #0a84ff;
   --accent-green: #30d158;
   --accent-orange: #ff9f0a;
   --accent-purple: #bf5af2;
+  --accent-hover: #E89DB9;
+  --accent-pressed: #D46F95;
 
   --border-color: rgba(255, 255, 255, 0.1);
   --border-color-light: rgba(255, 255, 255, 0.06);
@@ -51,12 +53,14 @@
   --text-tertiary: rgba(0, 0, 0, 0.5);
   --text-quaternary: rgba(0, 0, 0, 0.3);
 
-  --accent-primary: #ff2d55;
-  --accent-secondary: #ff2d55;
+  --accent-primary: #DE89A8;
+  --accent-secondary: #D46F95;
   --accent-blue: #007aff;
   --accent-green: #34c759;
   --accent-orange: #ff9500;
   --accent-purple: #af52de;
+  --accent-hover: #E89DB9;
+  --accent-pressed: #D46F95;
 
   --border-color: rgba(0, 0, 0, 0.1);
   --border-color-light: rgba(0, 0, 0, 0.06);
@@ -215,7 +219,7 @@ body {
 
 .playing-indicator span {
   width: 3px;
-  background: var(--accent-primary);
+  background: #DE89A8;
   border-radius: 2px;
   animation: playing-bar 0.6s ease-in-out infinite;
 }
