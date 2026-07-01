@@ -1,5 +1,6 @@
 import { usePlaybackStore } from '../stores/playbackStore'
 import { Track } from '@shared/types/streaming'
+import { createListeningEvent, saveListeningEvent } from './listeningBehavior'
 
 const audio = new Audio()
 audio.preload = 'auto'
@@ -27,6 +28,11 @@ function showVipAlert(trackName?: string, source?: string) {
 }
 
 async function loadAndPlay(track: Track) {
+  // ALWAYS reset lyrics first to prevent stale lyrics from previous track
+  usePlaybackStore.getState().setLyrics(null)
+  lastLyricIndex = -1
+  try { window.api.lyricsWindow.updateLine('', '') } catch {}
+
   const info = await window.api.streaming.resolvePlayback(track.source, track.id, 'standard')
   usePlaybackStore.getState().setCurrentTrack(track)
   usePlaybackStore.getState().setPlaybackInfo(info)
@@ -44,29 +50,36 @@ async function loadAndPlay(track: Track) {
 
   await audio.play()
 
-  // Load lyrics
+  // Load lyrics - if no lyrics found, explicitly set empty
   try {
     const lyrics = await window.api.lyrics.getLyrics({
       trackId: track.id, trackName: track.name, artistName: track.artists.join(', '), source: track.source
     })
-    if (lyrics) usePlaybackStore.getState().setLyrics(lyrics)
-  } catch {}
+    if (lyrics && lyrics.lines.length > 0) {
+      usePlaybackStore.getState().setLyrics(lyrics)
+    } else {
+      // No lyrics - ensure lyrics state is cleared
+      usePlaybackStore.getState().setLyrics(null)
+    }
+  } catch {
+    usePlaybackStore.getState().setLyrics(null)
+  }
 }
 
-export function restoreLastTrack() {
-  const state = usePlaybackStore.getState()
-  if (state.currentTrack) {
-    // Load the track metadata without playing
-    usePlaybackStore.getState().setCurrentTime(0)
-    // Load lyrics for the track
-    window.api.lyrics.getLyrics({
-      trackId: state.currentTrack.id,
-      trackName: state.currentTrack.name,
-      artistName: state.currentTrack.artists.join(', '),
-      source: state.currentTrack.source
-    }).then((lyrics) => {
-      if (lyrics) usePlaybackStore.getState().setLyrics(lyrics)
-    }).catch(() => {})
+// Skip to next track silently (used when current track fails)
+function skipToNext() {
+  const store = usePlaybackStore.getState()
+  const next = store.advanceToNext()
+  if (next) {
+    loadAndPlay(next).catch(() => {
+      // If next also fails, try again
+      const next2 = usePlaybackStore.getState().advanceToNext()
+      if (next2) {
+        loadAndPlay(next2).catch(() => {
+          // Give up
+        })
+      }
+    })
   }
 }
 
@@ -109,27 +122,24 @@ export function initAudio() {
   audio.addEventListener('pause', () => usePlaybackStore.getState().setIsPlaying(false))
 
   audio.addEventListener('ended', () => {
-    const store = usePlaybackStore.getState()
-    const nextTrack = store.advanceToNext()
-    if (nextTrack) {
-      loadAndPlay(nextTrack).catch(() => {
-        // VIP or error, try next
-        const next = usePlaybackStore.getState().advanceToNext()
-        if (next) loadAndPlay(next).catch(() => {})
-      })
+    // Track: completed playback
+    const track = usePlaybackStore.getState().currentTrack
+    if (track) {
+      const event = createListeningEvent(track, true, false, track.duration)
+      saveListeningEvent(event)
     }
+    skipToNext()
   })
 
   audio.addEventListener('error', () => {
+    // Track: skipped due to error
     const track = usePlaybackStore.getState().currentTrack
-    // Try next track silently
-    const store = usePlaybackStore.getState()
-    const next = store.advanceToNext()
-    if (next) {
-      loadAndPlay(next).catch(() => {})
-    } else if (track) {
-      showVipAlert(track.name, track.source)
+    if (track) {
+      const event = createListeningEvent(track, false, true, audio.currentTime * 1000)
+      saveListeningEvent(event)
     }
+    console.error('[Audio] error, skipping to next')
+    skipToNext()
   })
 
   usePlaybackStore.subscribe((state) => {
@@ -142,11 +152,12 @@ export function playSingleTrack(track: Track, source?: { page: string; id?: stri
   if (store.playlist.length === 0) {
     store.setPlaylist([track], 0)
   }
-  store.setCurrentTrack(track)
   if (source) store.setPlaySource(source)
   loadAndPlay(track).catch((err) => {
     console.error('[Playback] Failed:', err.message)
     showVipAlert(track.name, track.source)
+    // Skip to next if in queue
+    skipToNext()
   })
 }
 
@@ -157,6 +168,7 @@ export function playFromList(tracks: Track[], startIndex = 0, source?: { page: s
   loadAndPlay(tracks[startIndex]).catch((err) => {
     console.error('[Playback] Failed:', err.message)
     showVipAlert(tracks[startIndex].name, tracks[startIndex].source)
+    skipToNext()
   })
 }
 
@@ -165,8 +177,7 @@ export function playQueue(tracks: Track[], startIndex = 0, source?: { page: stri
   store.setPlaylist(tracks, startIndex)
   if (source) store.setPlaySource(source)
   loadAndPlay(tracks[startIndex]).catch(() => {
-    const next = usePlaybackStore.getState().advanceToNext()
-    if (next) loadAndPlay(next).catch(() => {})
+    skipToNext()
   })
 }
 
@@ -174,26 +185,33 @@ export function togglePlay() {
   const state = usePlaybackStore.getState()
   if (state.isPlaying) {
     audio.pause()
-  } else if (audio.src) {
-    audio.play()
+  } else if (audio.src && audio.src !== window.location.href) {
+    audio.play().catch(() => {
+      if (state.currentTrack) loadAndPlay(state.currentTrack).catch(() => {})
+    })
   } else if (state.currentTrack) {
     loadAndPlay(state.currentTrack).catch(() => {})
   }
 }
 
 export function pause() { audio.pause() }
-
 export function seek(time: number) { audio.currentTime = time }
-
-export function setVolume(volume: number) {
-  usePlaybackStore.getState().setVolume(volume)
-}
+export function setVolume(volume: number) { usePlaybackStore.getState().setVolume(volume) }
 
 export function nextTrack() {
+  // Track: user skipped current track
+  const current = usePlaybackStore.getState().currentTrack
+  if (current) {
+    const event = createListeningEvent(current, false, true, audio.currentTime * 1000)
+    saveListeningEvent(event)
+  }
+
   const store = usePlaybackStore.getState()
   const next = store.advanceToNext()
   if (next) {
-    loadAndPlay(next).catch(() => {})
+    loadAndPlay(next).catch(() => {
+      skipToNext()
+    })
   }
 }
 
@@ -214,4 +232,19 @@ export function stopAndClear() {
   audio.removeAttribute('src')
   audio.load()
   usePlaybackStore.getState().stopAndClear()
+}
+
+export function restoreLastTrack() {
+  const state = usePlaybackStore.getState()
+  if (state.currentTrack) {
+    usePlaybackStore.getState().setCurrentTime(0)
+    window.api.lyrics.getLyrics({
+      trackId: state.currentTrack.id,
+      trackName: state.currentTrack.name,
+      artistName: state.currentTrack.artists.join(', '),
+      source: state.currentTrack.source
+    }).then((lyrics) => {
+      if (lyrics) usePlaybackStore.getState().setLyrics(lyrics)
+    }).catch(() => {})
+  }
 }

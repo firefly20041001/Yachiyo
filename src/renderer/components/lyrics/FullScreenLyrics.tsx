@@ -44,6 +44,8 @@ export function FullScreenLyrics({ isOpen, onClose }: FullScreenLyricsProps) {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  const hasLyrics = lyrics && lyrics.lines.length > 0
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -66,6 +68,7 @@ export function FullScreenLyrics({ isOpen, onClose }: FullScreenLyricsProps) {
           </button>
 
           <div className="fullscreen-lyrics-content">
+            {/* Left: Album cover */}
             <div className="fullscreen-lyrics-left">
               <div
                 className={`fullscreen-lyrics-cover ${isPlaying ? 'spinning' : ''}`}
@@ -82,10 +85,11 @@ export function FullScreenLyrics({ isOpen, onClose }: FullScreenLyricsProps) {
               </div>
             </div>
 
+            {/* Right: Lyrics or track info */}
             <div className="fullscreen-lyrics-right">
-              <div className="fullscreen-lyrics-lines" ref={lyricsRef}>
-                {lyrics?.lines.length ? (
-                  lyrics.lines.map((line, index) => (
+              {hasLyrics ? (
+                <div className="fullscreen-lyrics-lines" ref={lyricsRef}>
+                  {lyrics.lines.map((line, index) => (
                     <div
                       key={index}
                       className={`fullscreen-lyric-line ${index === currentLyricIndex ? 'fullscreen-lyric-active' : ''}`}
@@ -98,11 +102,15 @@ export function FullScreenLyrics({ isOpen, onClose }: FullScreenLyricsProps) {
                       <div className="fullscreen-lyric-text">{line.text}</div>
                       {line.translation && <div className="fullscreen-lyric-translation">{line.translation}</div>}
                     </div>
-                  ))
-                ) : (
-                  <div className="fullscreen-lyrics-empty"><Music size={48} /><p>暂无歌词</p></div>
-                )}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="fullscreen-lyrics-empty">
+                  <Music size={48} />
+                  <p>{currentTrack?.name || '暂无歌词'}</p>
+                  <span style={{ fontSize: 14, opacity: 0.5 }}>{currentTrack?.artists?.join(', ')}</span>
+                </div>
+              )}
             </div>
           </div>
 

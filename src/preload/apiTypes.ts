@@ -74,6 +74,7 @@ export interface ElectronAPI {
     getLikedSongs: (source: MusicSource, userId: string) => Promise<Track[]>
     getAlbum: (source: MusicSource, id: string) => Promise<Album>
     getToplist: (topid: number, limit: number) => Promise<Track[]>
+    getDailyRecommend: (source: MusicSource) => Promise<Track[]>
   }
 
   lyrics: {

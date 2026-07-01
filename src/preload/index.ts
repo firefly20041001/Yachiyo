@@ -64,7 +64,8 @@ const api: ElectronAPI = {
     getLikedSongs: (source, userId) =>
       ipcRenderer.invoke('streaming:getLikedSongs', source, userId),
     getAlbum: (source, id) => ipcRenderer.invoke('streaming:getAlbum', source, id),
-    getToplist: (topid, limit) => ipcRenderer.invoke('streaming:getToplist', topid, limit)
+    getToplist: (topid, limit) => ipcRenderer.invoke('streaming:getToplist', topid, limit),
+    getDailyRecommend: (source) => ipcRenderer.invoke('streaming:getDailyRecommend', source)
   },
 
   lyrics: {

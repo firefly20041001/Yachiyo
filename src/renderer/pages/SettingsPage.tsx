@@ -94,7 +94,7 @@ export function SettingsPage() {
     setShortcuts(defaults)
   }
 
-  const CURRENT_VERSION = '1.0.5'
+  const CURRENT_VERSION = '1.1.0'
 
   const handleCheckUpdate = async () => {
     setCheckingUpdate(true)
@@ -291,7 +291,7 @@ export function SettingsPage() {
         <GlassPanel intensity="medium" className="settings-section">
           <h2 className="settings-section-title"><Info size={20} /> 关于</h2>
           <div className="settings-group">
-            <div className="setting-item"><div className="setting-label"><span>版本</span></div><span className="setting-value">1.0.5</span></div>
+            <div className="setting-item"><div className="setting-label"><span>版本</span></div><span className="setting-value">1.1.0</span></div>
             <div className="setting-item"><div className="setting-label"><span>技术栈</span></div><span className="setting-value">Electron + React + TypeScript</span></div>
             <div className="setting-item">
               <div className="setting-label">

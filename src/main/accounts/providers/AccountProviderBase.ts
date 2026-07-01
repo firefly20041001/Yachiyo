@@ -4,7 +4,6 @@ import { accountDB } from '../../database'
 export abstract class AccountProviderBase implements AccountProviderInterface {
   abstract provider: AccountProvider
 
-  // Default implementations - subclasses can override
   async generateQRCode(): Promise<LoginQRCode> {
     throw new Error('QR code login not supported for this provider')
   }
@@ -17,9 +16,7 @@ export abstract class AccountProviderBase implements AccountProviderInterface {
   abstract validateCookie(cookie: string): Promise<boolean>
 
   saveCookie(cookie: string): void {
-    const existing = accountDB.get(this.provider) || { cookie: '' }
     accountDB.set(this.provider, {
-      ...existing,
       cookie,
       updatedAt: Date.now()
     })
@@ -28,16 +25,13 @@ export abstract class AccountProviderBase implements AccountProviderInterface {
 
   getCookie(): string | null {
     const record = accountDB.get(this.provider)
-    const cookie = record?.cookie ?? null
-    console.log(`[${this.provider}] getCookie:`, cookie ? `found (${cookie.length} chars)` : 'null')
-    return cookie
+    return record?.cookie ?? null
   }
 
   saveAccountInfo(info: AccountInfo): void {
     const existing = accountDB.get(this.provider) || { cookie: '' }
     accountDB.set(this.provider, {
       ...existing,
-      cookie: existing.cookie,
       userId: info.userId,
       displayName: info.displayName,
       avatarUrl: info.avatarUrl,
@@ -49,16 +43,23 @@ export abstract class AccountProviderBase implements AccountProviderInterface {
 
   getStoredAccountInfo(): AccountInfo | null {
     const record = accountDB.get(this.provider)
-    if (!record?.userId) return null
+    console.log(`[${this.provider}] getStoredAccountInfo:`, record ? 'found' : 'null')
 
-    return {
-      provider: this.provider,
-      userId: record.userId,
-      displayName: record.displayName || '',
-      avatarUrl: record.avatarUrl,
-      isLoggedIn: true,
-      lastLoginAt: record.lastLoginAt
+    if (!record) return null
+
+    // If cookie exists, user is logged in
+    if (record.cookie) {
+      return {
+        provider: this.provider,
+        userId: record.userId || '',
+        displayName: record.displayName || (this.provider === 'netease' ? '网易云用户' : 'QQ用户'),
+        avatarUrl: record.avatarUrl,
+        isLoggedIn: true,
+        lastLoginAt: record.lastLoginAt
+      }
     }
+
+    return null
   }
 
   clearAccount(): void {

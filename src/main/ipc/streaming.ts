@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import { streamingRegistry } from '../streaming/StreamingProviderRegistry'
 import { QQMusicStreamingProvider } from '../streaming/providers/QQMusicStreamingProvider'
+import { fetchNeteaseDailyRecommend, fetchQQDailyRecommend } from '../providers/DailyRecommendService'
 import { MusicSource, QualityLevel, SearchRequest } from '@shared/types/streaming'
 
 export function registerStreamingIPC(): void {
@@ -61,5 +62,12 @@ export function registerStreamingIPC(): void {
   ipcMain.handle('streaming:getToplist', async (_event, topid: number, limit: number) => {
     const provider = streamingRegistry.getProvider('qqmusic') as QQMusicStreamingProvider
     return provider.getToplist(topid, limit)
+  })
+
+  // Daily recommendations
+  ipcMain.handle('streaming:getDailyRecommend', async (_event, source: MusicSource) => {
+    if (source === 'netease') return fetchNeteaseDailyRecommend()
+    if (source === 'qqmusic') return fetchQQDailyRecommend()
+    return []
   })
 }
