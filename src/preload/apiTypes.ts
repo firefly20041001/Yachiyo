@@ -25,6 +25,8 @@ export interface ElectronAPI {
     onNext: (callback: () => void) => void
     onPrev: (callback: () => void) => void
     updateTrack: (trackName: string, artist: string) => void
+    updatePlayingState: (isPlaying: boolean) => void
+    updateCover: (coverUrl: string) => void
   }
 
   lyricsWindow: {
@@ -57,6 +59,14 @@ export interface ElectronAPI {
     onToggleLyrics: (callback: () => void) => void
   }
 
+  devices: {
+    getAudioOutput: () => Promise<Array<{ deviceId: string; label: string; isDefault: boolean }>>
+    getCurrentOutput: () => Promise<string>
+    setAudioOutput: (deviceId: string) => Promise<boolean>
+    startListening: () => Promise<void>
+    onChanged: (callback: () => void) => void
+  }
+
   accounts: {
     openLogin: (provider: AccountProvider) => Promise<boolean>
     getAll: () => Promise<Record<AccountProvider, AccountInfo | null>>
@@ -84,10 +94,11 @@ export interface ElectronAPI {
   playlist: {
     getAll: () => Promise<SyncedPlaylist[]>
     getById: (id: string) => Promise<SyncedPlaylist | null>
-    createFromRemote: (playlist: Playlist) => Promise<SyncedPlaylist>
+    createFromRemote: (playlist: Playlist, sourceUrl?: string) => Promise<SyncedPlaylist>
     create: (name: string) => Promise<SyncedPlaylist>
     delete: (id: string) => Promise<void>
     sync: (request: PlaylistSyncRequest) => Promise<PlaylistSyncResult>
+    refresh: (id: string) => Promise<{ added: number; removed: number; kept: number; total: number }>
     addTrack: (playlistId: string, track: Track) => Promise<void>
     removeTrack: (playlistId: string, trackId: string) => Promise<void>
   }

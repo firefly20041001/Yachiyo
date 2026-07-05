@@ -12,7 +12,9 @@ const api: ElectronAPI = {
     onTogglePlay: (cb) => { ipcRenderer.removeAllListeners('tray:togglePlay'); ipcRenderer.on('tray:togglePlay', () => cb()) },
     onNext: (cb) => { ipcRenderer.removeAllListeners('tray:next'); ipcRenderer.on('tray:next', () => cb()) },
     onPrev: (cb) => { ipcRenderer.removeAllListeners('tray:prev'); ipcRenderer.on('tray:prev', () => cb()) },
-    updateTrack: (trackName, artist) => ipcRenderer.send('tray:updateTrack', trackName, artist)
+    updateTrack: (trackName, artist) => ipcRenderer.send('tray:updateTrack', trackName, artist),
+    updatePlayingState: (isPlaying) => ipcRenderer.send('playback:stateChanged', isPlaying),
+    updateCover: (coverUrl) => ipcRenderer.send('thumbnailbar:updateCover', coverUrl)
   },
 
   lyricsWindow: {
@@ -45,6 +47,14 @@ const api: ElectronAPI = {
     onToggleLyrics: (cb) => { ipcRenderer.removeAllListeners('shortcut:toggleLyrics'); ipcRenderer.on('shortcut:toggleLyrics', () => cb()) }
   },
 
+  devices: {
+    getAudioOutput: () => ipcRenderer.invoke('devices:getAudioOutput'),
+    getCurrentOutput: () => ipcRenderer.invoke('devices:getCurrentOutput'),
+    setAudioOutput: (deviceId) => ipcRenderer.invoke('devices:setAudioOutput', deviceId),
+    startListening: () => ipcRenderer.invoke('devices:startListening'),
+    onChanged: (cb) => { ipcRenderer.removeAllListeners('devices:changed'); ipcRenderer.on('devices:changed', () => cb()) }
+  },
+
   accounts: {
     openLogin: (provider) => ipcRenderer.invoke('accounts:openLogin', provider),
     getAll: () => ipcRenderer.invoke('accounts:getAll'),
@@ -75,10 +85,11 @@ const api: ElectronAPI = {
   playlist: {
     getAll: () => ipcRenderer.invoke('playlist:getAll'),
     getById: (id) => ipcRenderer.invoke('playlist:getById', id),
-    createFromRemote: (playlist) => ipcRenderer.invoke('playlist:createFromRemote', playlist),
+    createFromRemote: (playlist, sourceUrl) => ipcRenderer.invoke('playlist:createFromRemote', playlist, sourceUrl),
     create: (name) => ipcRenderer.invoke('playlist:create', name),
     delete: (id) => ipcRenderer.invoke('playlist:delete', id),
     sync: (request) => ipcRenderer.invoke('playlist:sync', request),
+    refresh: (id) => ipcRenderer.invoke('playlist:refresh', id),
     addTrack: (playlistId, track) => ipcRenderer.invoke('playlist:addTrack', playlistId, track),
     removeTrack: (playlistId, trackId) =>
       ipcRenderer.invoke('playlist:removeTrack', playlistId, trackId)

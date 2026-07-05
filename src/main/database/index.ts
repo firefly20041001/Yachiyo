@@ -19,6 +19,7 @@ interface PlaylistTrack {
   trackAlbum: string
   trackCover: string
   trackDuration: number
+  origin: 'import' | 'manual' // Track origin: imported or manually added
   matchedTrackId?: string
   matchedTrackSource?: string
   matchConfidence?: number
@@ -32,6 +33,8 @@ interface PlaylistRecord {
   coverUrl: string
   source: string
   sourcePlaylistId: string
+  sourceType: 'local' | 'import'
+  sourceUrl?: string
   tracks: PlaylistTrack[]
   lastSyncedAt: number
   createdAt: number

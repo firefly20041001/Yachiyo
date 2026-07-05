@@ -1,5 +1,5 @@
 import { MusicSource, Track, Playlist } from '@shared/types/streaming'
-import { SyncedPlaylist, SyncedTrack, PlaylistSyncRequest, PlaylistSyncResult } from '@shared/types/playlist'
+import { SyncedPlaylist, SyncedTrack, PlaylistSyncRequest, PlaylistSyncResult, PlaylistRefreshResult } from '@shared/types/playlist'
 import { playlistDB } from '../database'
 import { streamingRegistry } from '../streaming/StreamingProviderRegistry'
 
@@ -8,6 +8,7 @@ function generateId(): string {
 }
 
 export class PlaylistService {
+  // Create a local (empty) playlist
   async create(name: string): Promise<SyncedPlaylist> {
     const id = generateId()
     const now = Date.now()
@@ -19,6 +20,7 @@ export class PlaylistService {
       coverUrl: '',
       source: 'local' as any,
       sourcePlaylistId: '',
+      sourceType: 'local' as const,
       tracks: [],
       lastSyncedAt: now,
       createdAt: now
@@ -28,7 +30,8 @@ export class PlaylistService {
     return this.mapRecord(record)
   }
 
-  async createFromRemote(playlist: Playlist): Promise<SyncedPlaylist> {
+  // Create a playlist from a remote source (import)
+  async createFromRemote(playlist: Playlist, sourceUrl?: string): Promise<SyncedPlaylist> {
     const id = generateId()
     const now = Date.now()
 
@@ -39,6 +42,8 @@ export class PlaylistService {
       coverUrl: playlist.coverUrl,
       source: playlist.source,
       sourcePlaylistId: playlist.id,
+      sourceType: 'import' as const,
+      sourceUrl: sourceUrl || '',
       tracks: (playlist.tracks || []).map((track) => ({
         trackId: track.id,
         trackSource: track.source,
@@ -47,6 +52,7 @@ export class PlaylistService {
         trackAlbum: track.albumName,
         trackCover: track.albumCoverUrl,
         trackDuration: track.duration,
+        origin: 'import' as const,
         matchConfidence: 0,
         addedAt: now
       })),
@@ -59,8 +65,7 @@ export class PlaylistService {
   }
 
   async getAll(): Promise<SyncedPlaylist[]> {
-    const records = playlistDB.getAll()
-    return records.map((r) => this.mapRecord(r))
+    return playlistDB.getAll().map((r) => this.mapRecord(r))
   }
 
   async getById(id: string): Promise<SyncedPlaylist | null> {
@@ -73,15 +78,34 @@ export class PlaylistService {
     playlistDB.delete(id)
   }
 
-  async syncPlaylist(request: PlaylistSyncRequest): Promise<PlaylistSyncResult> {
-    const provider = streamingRegistry.getProvider(request.source)
-    const remotePlaylist = await provider.getPlaylist(request.playlistId)
+  // Refresh an imported playlist
+  async refreshPlaylist(playlistId: string): Promise<PlaylistRefreshResult> {
+    const record = playlistDB.get(playlistId)
+    if (!record || record.sourceType !== 'import') {
+      throw new Error('Not an imported playlist')
+    }
 
-    // Check if we already have this playlist
-    const existing = playlistDB.findBySource(request.source, request.playlistId)
+    const provider = streamingRegistry.getProvider(record.source as MusicSource)
+    const remotePlaylist = await provider.getPlaylist(record.sourcePlaylistId)
+    const remoteTracks = remotePlaylist.tracks || []
 
+    // Separate existing tracks by origin
+    const manualTracks = record.tracks.filter((t) => t.origin === 'manual')
+    const importedTracks = record.tracks.filter((t) => t.origin === 'import')
+
+    // Build set of remote track IDs
+    const remoteTrackIds = new Set(remoteTracks.map((t) => t.id))
+
+    // Find new tracks (in remote but not in imported)
+    const existingImportedIds = new Set(importedTracks.map((t) => t.trackId))
+    const newTracks = remoteTracks.filter((t) => !existingImportedIds.has(t.id))
+
+    // Find removed tracks (in imported but not in remote)
+    const removedTracks = importedTracks.filter((t) => !remoteTrackIds.has(t.trackId))
+
+    // Build new imported track records
     const now = Date.now()
-    const tracks = (remotePlaylist.tracks || []).map((track) => ({
+    const newImportedTracks = remoteTracks.map((track) => ({
       trackId: track.id,
       trackSource: track.source,
       trackName: track.name,
@@ -89,88 +113,33 @@ export class PlaylistService {
       trackAlbum: track.albumName,
       trackCover: track.albumCoverUrl,
       trackDuration: track.duration,
+      origin: 'import' as const,
       matchConfidence: 0,
       addedAt: now
     }))
 
-    if (existing) {
-      // Update existing
-      playlistDB.set(existing.id, {
-        ...existing,
-        name: remotePlaylist.name,
-        description: remotePlaylist.description || '',
-        coverUrl: remotePlaylist.coverUrl,
-        tracks,
-        lastSyncedAt: now
-      })
-    } else {
-      // Create new
-      const id = generateId()
-      playlistDB.set(id, {
-        id,
-        name: remotePlaylist.name,
-        description: remotePlaylist.description || '',
-        coverUrl: remotePlaylist.coverUrl,
-        source: request.source,
-        sourcePlaylistId: request.playlistId,
-        tracks,
-        lastSyncedAt: now,
-        createdAt: now
-      })
-    }
+    // Combine: new imported tracks + manual tracks
+    record.tracks = [...newImportedTracks, ...manualTracks]
+    record.lastSyncedAt = now
 
-    // Cross-platform matching
-    let matchedCount = 0
-    let unmatchedCount = 0
-
-    if (request.targetSource && request.targetSource !== request.source) {
-      const targetProvider = streamingRegistry.getProvider(request.targetSource)
-
-      for (const track of remotePlaylist.tracks || []) {
-        try {
-          const searchResult = await targetProvider.search({
-            query: `${track.name} ${track.artists.join(' ')}`,
-            source: request.targetSource,
-            type: ['track'],
-            limit: 5
-          })
-
-          const bestMatch = this.findBestMatch(track, searchResult.tracks)
-          if (bestMatch) {
-            matchedCount++
-          } else {
-            unmatchedCount++
-          }
-        } catch {
-          unmatchedCount++
-        }
-      }
-    }
-
-    const playlistId = existing ? existing.id : playlistDB.findBySource(request.source, request.playlistId)?.id || ''
-    const syncedPlaylist = await this.getById(playlistId)
+    playlistDB.set(playlistId, record)
 
     return {
-      success: true,
-      playlist: syncedPlaylist!,
-      matchedCount,
-      unmatchedCount,
-      errors: []
+      added: newTracks.length,
+      removed: removedTracks.length,
+      kept: manualTracks.length,
+      total: record.tracks.length
     }
   }
 
   async addTrack(playlistId: string, track: Track): Promise<void> {
     const record = playlistDB.get(playlistId)
-    if (!record) {
-      console.log('[Playlist] addTrack: playlist not found:', playlistId)
-      return
-    }
+    if (!record) return
 
-    console.log('[Playlist] addTrack:', track.name, 'to', record.name, 'tracks count:', record.tracks.length)
-
-    // Remove existing entry if present, then add to top
+    // Remove duplicate if exists
     record.tracks = record.tracks.filter((t) => !(t.trackId === track.id && t.trackSource === track.source))
 
+    // Add to top with origin 'manual'
     record.tracks.unshift({
       trackId: track.id,
       trackSource: track.source,
@@ -179,53 +148,49 @@ export class PlaylistService {
       trackAlbum: track.albumName,
       trackCover: track.albumCoverUrl,
       trackDuration: track.duration,
+      origin: 'manual',
       matchConfidence: 0,
       addedAt: Date.now()
     })
 
-    console.log('[Playlist] addTrack: done, new count:', record.tracks.length)
     playlistDB.set(playlistId, record)
   }
 
   async removeTrack(playlistId: string, trackId: string): Promise<void> {
     const record = playlistDB.get(playlistId)
-    if (!record) {
-      console.log('[Playlist] removeTrack: playlist not found:', playlistId)
-      return
-    }
+    if (!record) return
 
-    const beforeCount = record.tracks.length
-    console.log('[Playlist] removeTrack: looking for trackId:', trackId, 'in', beforeCount, 'tracks')
-    console.log('[Playlist] existing trackIds:', record.tracks.map(t => t.trackId).slice(0, 5))
     record.tracks = record.tracks.filter((t) => t.trackId !== trackId)
-    const afterCount = record.tracks.length
-    console.log('[Playlist] removeTrack result: before:', beforeCount, 'after:', afterCount)
     playlistDB.set(playlistId, record)
   }
 
-  private findBestMatch(original: Track, candidates: Track[]): Track | null {
-    if (!candidates.length) return null
+  // Legacy sync method (kept for compatibility)
+  async syncPlaylist(request: PlaylistSyncRequest): Promise<PlaylistSyncResult> {
+    const provider = streamingRegistry.getProvider(request.source)
+    const remotePlaylist = await provider.getPlaylist(request.playlistId)
 
-    const originalName = original.name.toLowerCase().trim()
-    const originalArtists = original.artists.map((a) => a.toLowerCase().trim()).sort().join(',')
+    const existing = playlistDB.findBySource(request.source, request.playlistId)
 
-    for (const candidate of candidates) {
-      const candidateName = candidate.name.toLowerCase().trim()
-      const candidateArtists = candidate.artists.map((a) => a.toLowerCase().trim()).sort().join(',')
-
-      if (candidateName === originalName && candidateArtists === originalArtists) {
-        return candidate
+    if (existing) {
+      await this.refreshPlaylist(existing.id)
+      const updated = playlistDB.get(existing.id)!
+      return {
+        success: true,
+        playlist: this.mapRecord(updated),
+        matchedCount: 0,
+        unmatchedCount: 0,
+        errors: []
       }
     }
 
-    for (const candidate of candidates) {
-      const candidateName = candidate.name.toLowerCase().trim()
-      if (candidateName.includes(originalName) || originalName.includes(candidateName)) {
-        return candidate
-      }
+    const created = await this.createFromRemote(remotePlaylist)
+    return {
+      success: true,
+      playlist: created,
+      matchedCount: 0,
+      unmatchedCount: 0,
+      errors: []
     }
-
-    return null
   }
 
   private mapRecord(record: any): SyncedPlaylist {
@@ -234,13 +199,15 @@ export class PlaylistService {
       name: record.name,
       description: record.description,
       coverUrl: record.coverUrl,
-      source: record.source as MusicSource,
+      source: record.source,
       sourcePlaylistId: record.sourcePlaylistId,
+      sourceType: record.sourceType || 'local',
+      sourceUrl: record.sourceUrl,
       tracks: (record.tracks || []).map((t: any) => ({
         id: `${t.trackId}-${t.trackSource}`,
         track: {
           id: t.trackId,
-          source: t.trackSource as MusicSource,
+          source: t.trackSource,
           name: t.trackName,
           artists: JSON.parse(t.trackArtists || '[]'),
           albumName: t.trackAlbum || '',
@@ -248,10 +215,11 @@ export class PlaylistService {
           albumCoverUrl: t.trackCover || '',
           duration: t.trackDuration || 0
         },
+        origin: t.origin || 'manual',
         matchedTrack: t.matchedTrackId
           ? {
               id: t.matchedTrackId,
-              source: t.matchedTrackSource as MusicSource,
+              source: t.matchedTrackSource,
               name: '',
               artists: [],
               albumName: '',

@@ -20,6 +20,8 @@ export function PlaylistPage() {
   const [importing, setImporting] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [newPlaylistName, setNewPlaylistName] = useState('')
+  const [refreshing, setRefreshing] = useState(false)
+  const [refreshResult, setRefreshResult] = useState<{ added: number; removed: number; kept: number } | null>(null)
 
   useEffect(() => { refreshPlaylists() }, [])
 
@@ -27,12 +29,24 @@ export function PlaylistPage() {
 
   const handleSelectPlaylist = async (playlistId: string) => {
     setSelectedPlaylistId(playlistId)
+    setRefreshResult(null)
     setLoadingTracks(true)
     try {
       const playlist = await window.api.playlist.getById(playlistId)
-      if (playlist) setPlaylistTracks(playlist.tracks.map(t => t.track))
-    } catch { setPlaylistTracks([]) }
-    finally { setLoadingTracks(false) }
+      if (playlist) {
+        // Sort: manual tracks first, then imported tracks
+        const sorted = [...playlist.tracks].sort((a, b) => {
+          if (a.origin === 'manual' && b.origin !== 'manual') return -1
+          if (a.origin !== 'manual' && b.origin === 'manual') return 1
+          return 0
+        })
+        setPlaylistTracks(sorted.map(t => t.track))
+      }
+    } catch {
+      setPlaylistTracks([])
+    } finally {
+      setLoadingTracks(false)
+    }
   }
 
   const handlePlayAll = () => {
@@ -42,6 +56,37 @@ export function PlaylistPage() {
   const handleBack = () => {
     setSelectedPlaylistId(null)
     setPlaylistTracks([])
+    setRefreshResult(null)
+  }
+
+  const handleDeleteTrack = async (track: Track) => {
+    if (!selectedPlaylistId) return
+    try {
+      await window.api.playlist.removeTrack(selectedPlaylistId, track.id)
+      setPlaylistTracks(prev => prev.filter(t => t.id !== track.id))
+    } catch (err) {
+      console.error('Failed to delete track:', err)
+    }
+  }
+
+  const handleRefresh = async () => {
+    if (!selectedPlaylistId) return
+    setRefreshing(true)
+    setRefreshResult(null)
+    try {
+      const result = await window.api.playlist.refresh(selectedPlaylistId)
+      setRefreshResult(result)
+      // Reload tracks
+      const playlist = await window.api.playlist.getById(selectedPlaylistId)
+      if (playlist) {
+        setPlaylistTracks(playlist.tracks.map(t => t.track))
+      }
+      await refreshPlaylists()
+    } catch (err) {
+      console.error('Failed to refresh playlist:', err)
+    } finally {
+      setRefreshing(false)
+    }
   }
 
   const handleCreate = async () => {
@@ -56,16 +101,6 @@ export function PlaylistPage() {
     }
   }
 
-  const handleDeleteTrack = async (track: Track, index: number) => {
-    if (!selectedPlaylistId) return
-    try {
-      await window.api.playlist.removeTrack(selectedPlaylistId, track.id)
-      setPlaylistTracks(prev => prev.filter((_, i) => i !== index))
-    } catch (err) {
-      console.error('Failed to delete track:', err)
-    }
-  }
-
   const handleImport = async () => {
     if (!importUrl.trim()) return
     setImporting(true)
@@ -76,18 +111,30 @@ export function PlaylistPage() {
       const neteaseMatch = importUrl.match(/playlist[?/](\d+)/)
       if (neteaseMatch) playlistId = neteaseMatch[1]
 
+      console.log('[Import] Source:', importSource, 'ID:', playlistId)
+
       if (/^\d+$/.test(playlistId)) {
         const playlist = await window.api.streaming.getPlaylist(importSource, playlistId)
+        console.log('[Import] Got playlist:', playlist?.name, 'tracks:', playlist?.tracks?.length)
         if (playlist) {
-          await window.api.playlist.createFromRemote(playlist)
+          await window.api.playlist.createFromRemote(playlist, importUrl)
           await refreshPlaylists()
           setShowImport(false)
           setImportUrl('')
+        } else {
+          console.error('[Import] Playlist not found')
         }
+      } else {
+        console.error('[Import] Invalid playlist ID:', playlistId)
       }
-    } catch (err) { console.error('Import failed:', err) }
-    finally { setImporting(false) }
+    } catch (err) {
+      console.error('[Import] Failed:', err)
+    } finally {
+      setImporting(false)
+    }
   }
+
+  const isImported = selectedPlaylist?.sourceType === 'import'
 
   return (
     <div className="page playlist-page">
@@ -99,12 +146,30 @@ export function PlaylistPage() {
             <>
               <button className="btn btn-ghost" onClick={() => refreshPlaylists()}><RefreshCw size={16} /></button>
               <button className="btn btn-ghost" onClick={() => setShowCreate(!showCreate)}><FolderPlus size={16} /></button>
-              <button className="btn btn-primary" onClick={() => setShowImport(!showImport)}><Plus size={16} /> 导入歌单</button>
+              <button className="btn btn-primary" onClick={() => { console.log('[Import] Toggle import form'); setShowImport(!showImport) }}><Plus size={16} /> 导入歌单</button>
             </>
           )}
         </div>
       </motion.div>
 
+      {/* Create Playlist */}
+      {showCreate && !selectedPlaylist && (
+        <GlassPanel intensity="medium" className="import-panel">
+          <h3>新建歌单</h3>
+          <div className="import-form">
+            <div className="import-input-row">
+              <input type="text" className="import-input" placeholder="输入歌单名称..." value={newPlaylistName}
+                onChange={(e) => setNewPlaylistName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleCreate() }} autoFocus />
+              <button className="btn btn-primary" onClick={handleCreate} disabled={!newPlaylistName.trim()}>
+                <FolderPlus size={16} /> 创建
+              </button>
+            </div>
+          </div>
+        </GlassPanel>
+      )}
+
+      {/* Import Section */}
       {showImport && !selectedPlaylist && (
         <GlassPanel intensity="medium" className="import-panel">
           <h3>导入歌单</h3>
@@ -118,29 +183,6 @@ export function PlaylistPage() {
               <button className="btn btn-primary" onClick={handleImport} disabled={importing}>
                 {importing ? <RefreshCw size={16} className="spin" /> : <Download size={16} />}
                 {importing ? '导入中...' : '导入'}
-              </button>
-            </div>
-          </div>
-        </GlassPanel>
-      )}
-
-      {/* Create Playlist */}
-      {showCreate && !selectedPlaylist && (
-        <GlassPanel intensity="medium" className="import-panel">
-          <h3>新建歌单</h3>
-          <div className="import-form">
-            <div className="import-input-row">
-              <input
-                type="text"
-                className="import-input"
-                placeholder="输入歌单名称..."
-                value={newPlaylistName}
-                onChange={(e) => setNewPlaylistName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleCreate() }}
-                autoFocus
-              />
-              <button className="btn btn-primary" onClick={handleCreate} disabled={!newPlaylistName.trim()}>
-                <FolderPlus size={16} /> 创建
               </button>
             </div>
           </div>
@@ -166,10 +208,30 @@ export function PlaylistPage() {
               <div className="playlist-detail-meta">
                 <span>{playlistTracks.length} 首歌曲</span>
                 <span>来源: {selectedPlaylist.source === 'netease' ? '网易云' : 'QQ音乐'}</span>
+                {isImported && <span>类型: 导入歌单</span>}
               </div>
-              <button className="btn btn-primary" onClick={handlePlayAll} disabled={playlistTracks.length === 0}>播放全部</button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-primary" onClick={handlePlayAll} disabled={playlistTracks.length === 0}>播放全部</button>
+                {isImported && (
+                  <button className="btn btn-ghost" onClick={handleRefresh} disabled={refreshing}>
+                    {refreshing ? <RefreshCw size={16} className="spin" /> : <RefreshCw size={16} />}
+                    {refreshing ? '刷新中...' : '刷新歌单'}
+                  </button>
+                )}
+              </div>
             </div>
           </GlassPanel>
+
+          {/* Refresh Result */}
+          {refreshResult && (
+            <GlassPanel intensity="light" className="import-panel" style={{ marginTop: 12 }}>
+              <div style={{ display: 'flex', gap: 24, justifyContent: 'center' }}>
+                <span style={{ color: 'var(--accent-green)' }}>新增 {refreshResult.added} 首</span>
+                <span style={{ color: '#ff3b30' }}>移除 {refreshResult.removed} 首</span>
+                <span style={{ color: 'var(--text-secondary)' }}>保留 {refreshResult.kept} 首手动添加</span>
+              </div>
+            </GlassPanel>
+          )}
 
           {loadingTracks ? (
             <div className="loading-container"><div className="loading-spinner" /><p>加载歌曲...</p></div>
@@ -201,7 +263,10 @@ export function PlaylistPage() {
                   </div>
                   <div className="playlist-item-info">
                     <div className="playlist-item-name">{playlist.name}</div>
-                    <div className="playlist-item-meta">{playlist.tracks.length} 首歌曲 · {playlist.source === 'netease' ? '网易云' : 'QQ音乐'}</div>
+                    <div className="playlist-item-meta">
+                      {playlist.tracks.length} 首歌曲 · {playlist.source === 'netease' ? '网易云' : 'QQ音乐'}
+                      {playlist.sourceType === 'import' && ' · 导入'}
+                    </div>
                   </div>
                   <div className="playlist-item-actions">
                     <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); deletePlaylist(playlist.id) }}>

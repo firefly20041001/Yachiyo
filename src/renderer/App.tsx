@@ -45,8 +45,10 @@ function TrayAndShortcutHandler() {
   useEffect(() => {
     if (currentTrack) {
       window.api.tray.updateTrack(currentTrack.name, currentTrack.artists?.join(', ') || '')
+      window.api.tray.updateCover(currentTrack.albumCoverUrl || '')
     } else {
       window.api.tray.updateTrack('未播放', '')
+      window.api.tray.updateCover('')
     }
   }, [currentTrack])
 

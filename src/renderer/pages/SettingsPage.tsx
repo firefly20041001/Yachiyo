@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Moon, Sun, Monitor, Info, X, Type, Eye, EyeOff, Lock, Unlock, Keyboard, RotateCcw, Palette } from 'lucide-react'
+import { Moon, Sun, Monitor, Info, X, Type, Eye, EyeOff, Lock, Unlock, Keyboard, RotateCcw, Palette, Volume2, Speaker, RefreshCw } from 'lucide-react'
 import { useUIStore } from '../stores/uiStore'
 import { GlassPanel } from '../components/common/GlassPanel'
 import { ColorWheel } from '../components/common/ColorWheel'
+
+interface AudioDevice {
+  deviceId: string
+  label: string
+  isDefault: boolean
+}
 
 const ACTION_LABELS: Record<string, string> = {
   togglePlay: '播放/暂停',
@@ -23,19 +29,38 @@ export function SettingsPage() {
   const [updateStatus, setUpdateStatus] = useState('')
   const [themeColor, setThemeColor] = useState('#DE89A8')
   const [showColorWheel, setShowColorWheel] = useState(false)
+  const [audioDevices, setAudioDevices] = useState<AudioDevice[]>([])
+  const [currentDevice, setCurrentDevice] = useState('default')
+  const [followSystem, setFollowSystem] = useState(true)
+  const [autoLaunch, setAutoLaunch] = useState(false)
   const [lyrics, setLyrics] = useState({
     enabled: false, fontSize: 28, fontFamily: 'PingFang SC', color: '#ffffff',
     bgColor: 'rgba(0,0,0,0.3)', opacity: 0.9, translationEnabled: true,
     locked: false, bold: true, borderRadius: 16, textShadow: true
   })
 
+  const loadAudioDevices = async () => {
+    try {
+      const devices = await window.api.devices.getAudioOutput()
+      setAudioDevices(devices)
+      const current = await window.api.devices.getCurrentOutput()
+      setCurrentDevice(current)
+    } catch {}
+  }
+
   useEffect(() => {
     window.api.settings.get('settings.closeAction', 'minimize').then((v) => setCloseAction(v))
     window.api.settings.get('settings.themeColor', '#DE89A8').then((v) => setThemeColor(v))
+    window.api.settings.get('settings.followSystemDevice', true).then((v) => setFollowSystem(v))
+    window.api.settings.get('settings.autoLaunch', false).then((v) => setAutoLaunch(v))
     window.api.lyricsWindow.getSettings().then((s) => setLyrics(prev => ({ ...prev, ...s })))
     window.api.shortcuts.get().then((s) => setShortcuts(s))
-
     window.api.lyricsWindow.onSettingsChanged((s) => setLyrics(prev => ({ ...prev, ...s })))
+
+    // Load audio devices
+    loadAudioDevices()
+    window.api.devices.startListening()
+    window.api.devices.onChanged(() => loadAudioDevices())
   }, [])
 
   useEffect(() => {
@@ -94,7 +119,7 @@ export function SettingsPage() {
     setShortcuts(defaults)
   }
 
-  const CURRENT_VERSION = '1.1.0'
+  const CURRENT_VERSION = '2.0.0'
 
   const handleCheckUpdate = async () => {
     setCheckingUpdate(true)
@@ -142,6 +167,99 @@ export function SettingsPage() {
       </motion.div>
 
       <div className="settings-sections">
+        {/* Playback Restore */}
+        <GlassPanel intensity="medium" className="settings-section">
+          <h2 className="settings-section-title"><RotateCcw size={20} /> 播放恢复</h2>
+          <div className="settings-group">
+            <div className="setting-item">
+              <div className="setting-label">
+                <span>恢复播放列表</span>
+                <span className="setting-desc">启动时恢复上次播放列表</span>
+              </div>
+              <button className="theme-btn theme-btn-active">已开启</button>
+            </div>
+            <div className="setting-item">
+              <div className="setting-label">
+                <span>恢复播放进度</span>
+                <span className="setting-desc">恢复到上次播放的位置</span>
+              </div>
+              <button className="theme-btn theme-btn-active">已开启</button>
+            </div>
+            <div className="setting-item">
+              <div className="setting-label">
+                <span>自动继续播放</span>
+                <span className="setting-desc">启动后自动继续播放</span>
+              </div>
+              <button className="theme-btn theme-btn-active">已开启</button>
+            </div>
+            <div className="setting-item">
+              <div className="setting-label">
+                <span>恢复输出设备</span>
+                <span className="setting-desc">恢复上次选择的音频输出设备</span>
+              </div>
+              <button className="theme-btn theme-btn-active">已开启</button>
+            </div>
+          </div>
+        </GlassPanel>
+
+        {/* Audio Output */}
+        <GlassPanel intensity="medium" className="settings-section">
+          <h2 className="settings-section-title"><Speaker size={20} /> 音频输出</h2>
+          <div className="settings-group">
+            <div className="setting-item">
+              <div className="setting-label">
+                <span>跟随系统默认设备</span>
+                <span className="setting-desc">开启后始终使用系统默认输出设备</span>
+              </div>
+              <button
+                className={`theme-btn ${followSystem ? 'theme-btn-active' : ''}`}
+                onClick={async () => {
+                  const newVal = !followSystem
+                  setFollowSystem(newVal)
+                  await window.api.settings.set('settings.followSystemDevice', newVal)
+                  if (newVal) {
+                    await window.api.devices.setAudioOutput('default')
+                    setCurrentDevice('default')
+                  }
+                }}
+              >
+                {followSystem ? '已开启' : '已关闭'}
+              </button>
+            </div>
+            {!followSystem && (
+              <div className="setting-item">
+                <div className="setting-label">
+                  <span>输出设备</span>
+                  <span className="setting-desc">选择音频输出设备</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxWidth: 300 }}>
+                  {audioDevices.map((device) => (
+                    <button
+                      key={device.deviceId}
+                      className={`theme-btn ${currentDevice === device.deviceId ? 'theme-btn-active' : ''}`}
+                      onClick={async () => {
+                        const success = await window.api.devices.setAudioOutput(device.deviceId)
+                        if (success) setCurrentDevice(device.deviceId)
+                      }}
+                      style={{ justifyContent: 'flex-start', fontSize: 12 }}
+                    >
+                      <Volume2 size={14} />
+                      {device.label || '未知设备'}
+                      {device.isDefault && ' (系统默认)'}
+                    </button>
+                  ))}
+                  <button className="btn btn-ghost btn-sm" onClick={loadAudioDevices} style={{ marginTop: 4 }}>
+                    <RefreshCw size={14} /> 刷新设备列表
+                  </button>
+                  <span style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>
+                    💡 切换设备后切歌生效
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </GlassPanel>
+
         {/* Appearance */}
         <GlassPanel intensity="medium" className="settings-section">
           <h2 className="settings-section-title"><Monitor size={20} /> 外观</h2>
@@ -284,6 +402,26 @@ export function SettingsPage() {
                 <button className={`theme-btn ${closeAction === 'exit' ? 'theme-btn-active' : ''}`} onClick={() => handleCloseActionChange('exit')}>退出应用</button>
               </div>
             </div>
+            <div className="setting-item">
+              <div className="setting-label">
+                <span>开机自启</span>
+                <span className="setting-desc">开机时自动启动播放器</span>
+              </div>
+              <button
+                className={`theme-btn ${autoLaunch ? 'theme-btn-active' : ''}`}
+                onClick={async () => {
+                  const newVal = !autoLaunch
+                  setAutoLaunch(newVal)
+                  await window.api.settings.set('settings.autoLaunch', newVal)
+                  // Apply via Electron API
+                  try {
+                    await window.api.settings.set('autoLaunch', newVal)
+                  } catch {}
+                }}
+              >
+                {autoLaunch ? '已开启' : '已关闭'}
+              </button>
+            </div>
           </div>
         </GlassPanel>
 
@@ -291,7 +429,7 @@ export function SettingsPage() {
         <GlassPanel intensity="medium" className="settings-section">
           <h2 className="settings-section-title"><Info size={20} /> 关于</h2>
           <div className="settings-group">
-            <div className="setting-item"><div className="setting-label"><span>版本</span></div><span className="setting-value">1.1.0</span></div>
+            <div className="setting-item"><div className="setting-label"><span>版本</span></div><span className="setting-value">2.0.0</span></div>
             <div className="setting-item"><div className="setting-label"><span>技术栈</span></div><span className="setting-value">Electron + React + TypeScript</span></div>
             <div className="setting-item">
               <div className="setting-label">
