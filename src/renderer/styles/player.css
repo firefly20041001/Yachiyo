@@ -49,6 +49,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
+  z-index: 1;
 }
 
 /* Progress Bar */
@@ -63,6 +64,7 @@
   padding: 0 20px;
   height: 16px;
   pointer-events: none;
+  z-index: 10;
 }
 
 .progress-time {
