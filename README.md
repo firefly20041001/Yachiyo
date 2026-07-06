@@ -28,11 +28,11 @@ Unified · Fast · Beautiful
 
 | 首页                                                         | 歌词                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![](\docs\screenshots\1.png) | ![](\docs\screenshots\2.png) |
+| ![](docs\screenshots\1.png) | ![](docs\screenshots\2.png) |
 
 | 每日推荐                                                     | 设置                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![](\docs\screenshots\3.png) | ![](\docs\screenshots\4.png) |
+| ![](docs\screenshots\3.png) | ![](docs\screenshots\4.png) |
 
 # ✨ 功能特色
 
