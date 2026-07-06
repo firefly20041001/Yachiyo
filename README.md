@@ -4,53 +4,47 @@
 
 ### Elegant Music Experience
 
-QQ Music × NetEase Cloud Music
+**QQ Music × NetEase Cloud Music**
 
 Unified · Fast · Beautiful
 
 <br>
 
 ![Platform](https://img.shields.io/badge/Platform-Windows-blue?style=for-the-badge)
-![Electron](https://img.shields.io/badge/Electron-Latest-47848F?style=for-the-badge\&logo=electron)
-![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge\&logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge\&logo=typescript)
-![QQMusic](https://img.shields.io/badge/QQMusic-Supported-31C27C?style=for-the-badge)
-![NetEase](https://img.shields.io/badge/NetEaseCloud-Supported-D43C33?style=for-the-badge)
+![Electron](https://img.shields.io/badge/Electron-Latest-47848F?style=for-the-badge&logo=electron)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript)
+![QQ Music](https://img.shields.io/badge/QQMusic-Supported-31C27C?style=for-the-badge)
+![NetEase Cloud Music](https://img.shields.io/badge/NetEaseCloud-Supported-D43C33?style=for-the-badge)
 
 </div>
 
 ---
 
-
 # 📷 软件预览
 
-> 建议放四张截图
+| 首页 | 歌词 |
+|------|------|
+| <img src="docs/screenshots/1.png" width="100%"> | <img src="docs/screenshots/2.png" width="100%"> |
 
-| 首页                                                         | 歌词                                                         |
-| ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![](docs\screenshots\1.png) | ![](docs\screenshots\2.png) |
+| 每日推荐 | 设置 |
+|------|------|
+| <img src="docs/screenshots/3.png" width="100%"> | <img src="docs/screenshots/4.png" width="100%"> |
 
-| 每日推荐                                                     | 设置                                                         |
-| ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![](docs\screenshots\3.png) | ![](docs\screenshots\4.png) |
+---
 
 # ✨ 功能特色
 
 ## 🎶 本地音乐
 
-✔ 极速扫描本地音乐
+- ✔ 极速扫描本地音乐
+- ✔ 多格式支持
+- ✔ 播放列表
+- ✔ 收藏歌曲
+- ✔ 历史播放
+- ✔ 搜索音乐
 
-✔ 多格式支持
-
-✔ 播放列表
-
-✔ 收藏歌曲
-
-✔ 历史播放
-
-✔ 搜索音乐
-
-------
+---
 
 ## 🌸 每日推荐
 
@@ -63,18 +57,18 @@ Unified · Fast · Beautiful
 
 未来还将持续扩展更多平台。
 
-------
+---
 
 ## 👤 多平台账号
 
-支持多个账号登录。
+支持多个账号登录：
 
 - 网易云音乐
 - QQ 音乐
 
 无需频繁切换软件。
 
-------
+---
 
 ## 🎼 歌词系统
 
@@ -86,7 +80,7 @@ Unified · Fast · Beautiful
 - 滚动歌词
 - 歌词窗口独立显示
 
-------
+---
 
 ## 🎧 输出设备切换
 
@@ -100,7 +94,7 @@ Unified · Fast · Beautiful
 - USB DAC
 - 其它 Windows 音频设备
 
-------
+---
 
 ## 💾 播放恢复
 
@@ -113,7 +107,7 @@ Unified · Fast · Beautiful
 
 继续播放，无需重新寻找歌曲。
 
-------
+---
 
 ## 🖥 Windows 深度集成
 
@@ -121,26 +115,26 @@ Unified · Fast · Beautiful
 
 - 系统托盘
 - 开机自启
-- 缩略图播放控制
+- 缩略图播放控制（Thumbnail Toolbar）
 - 全局快捷键
 - 多窗口
 - 桌面歌词
 
 更符合 Windows 用户的使用习惯。
 
-------
+---
 
 # 🚀 安装
 
 前往 **Releases** 下载最新版本。
 
-```
+```text
 Yachiyo-Setup.exe
 ```
 
 双击安装即可开始使用。
 
-------
+---
 
 # 📂 项目结构
 
@@ -158,46 +152,47 @@ src
 └── main              # 主进程
 ```
 
-------
+---
 
 # 🛠 技术栈
 
-| 技术        | 用途     |
-| ----------- | -------- |
-| Electron    | 桌面应用 |
-| TypeScript  | 开发语言 |
-| Node.js     | Runtime  |
-| SQLite      | 数据存储 |
+| 技术 | 用途 |
+|------|------|
+| Electron | 桌面应用 |
+| React | UI 框架 |
+| TypeScript | 开发语言 |
+| Node.js | Runtime |
+| SQLite | 数据存储 |
 | Windows API | 系统集成 |
 
-------
+---
 
 # 📋 Roadmap
 
-## 已完成
+## ✅ 已完成
 
-- ✅ 本地音乐
-- ✅ 播放列表
-- ✅ 网易云登录
-- ✅ QQ 音乐登录
-- ✅ 每日推荐
-- ✅ 在线歌词
-- ✅ 桌面歌词
-- ✅ 输出设备切换
-- ✅ 自动恢复播放
-- ✅ 开机自启
-- ✅ Windows 托盘
+- 本地音乐
+- 播放列表
+- 网易云登录
+- QQ 音乐登录
+- 每日推荐
+- 在线歌词
+- 桌面歌词
+- 输出设备切换
+- 自动恢复播放
+- 开机自启
+- Windows 托盘
 
-## 开发中
+## 🚧 开发中
 
-- 🔄 更多音乐平台
-- 🔄 自定义主题
-- 🔄 均衡器
-- 🔄 插件系统
-- 🔄 播放统计
-- 🔄 歌词翻译
+- 更多音乐平台
+- 自定义主题
+- 均衡器
+- 插件系统
+- 播放统计
+- 歌词翻译
 
-------
+---
 
 # ❤️ 致谢
 
@@ -206,12 +201,13 @@ src
 包括但不限于：
 
 - Electron
+- React
 - TypeScript
 - Node.js
 
 以及所有为 Yachiyo 提出建议、提交 Issue、贡献代码的开发者。
 
-------
+---
 
 # 🤝 贡献
 
@@ -222,9 +218,9 @@ src
 - Bug Report
 - Feature Request
 
-每一个 Star ⭐ 都是对项目最大的支持。
+如果喜欢这个项目，欢迎点一个 **⭐ Star** 支持！
 
-------
+---
 
 # 📄 License
 
