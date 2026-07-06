@@ -45,6 +45,7 @@ export interface ElectronAPI {
   settings: {
     get: (key: string, defaultValue?: any) => Promise<any>
     set: (key: string, value: any) => Promise<void>
+    setAutoLaunch: (enabled: boolean) => Promise<boolean>
   }
 
   shortcuts: {

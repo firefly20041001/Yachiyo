@@ -5,6 +5,7 @@ import { setupThumbnailBar, updateThumbnailBarState } from './app/thumbnailBar'
 import { registerAllIPC } from './ipc'
 import { registerLyricsIPC, updateLyricsWindow, toggleLyricsWindow, createLyricsWindow } from './app/lyricsWindow'
 import { registerShortcuts, unregisterShortcuts } from './app/shortcuts'
+import { setupAutoLaunch, registerAutoLaunchIPC, isAutoLaunch, isLaunchMinimized } from './app/autoLaunch'
 import { settingsDB } from './database'
 
 let mainWindow: BrowserWindow | null = null
@@ -29,6 +30,7 @@ if (!gotTheLock) {
   app.whenReady().then(() => {
     registerAllIPC()
     registerLyricsIPC()
+    setupAutoLaunch()
 
     ipcMain.on('window:minimize', () => mainWindow?.minimize())
     ipcMain.on('window:maximize', () => {
@@ -63,6 +65,15 @@ if (!gotTheLock) {
 
     ipcMain.handle('settings:get', (_e, key: string, defaultValue: any) => settingsDB.get(key, defaultValue))
     ipcMain.handle('settings:set', (_e, key: string, value: any) => settingsDB.set(key, value))
+
+    // Auto-launch
+    ipcMain.handle('app:setAutoLaunch', (_e, enabled: boolean) => {
+      app.setLoginItemSettings({
+        openAtLogin: enabled,
+        path: app.getPath('exe')
+      })
+      return true
+    })
     ipcMain.on('window:show', () => {
       if (mainWindow) { mainWindow.show(); mainWindow.focus() }
     })
@@ -70,6 +81,15 @@ if (!gotTheLock) {
     mainWindow = createMainWindow()
     createTray()
     setupThumbnailBar(mainWindow)
+
+    // Check if started via Windows auto-start
+    const isStartup = process.argv.includes('--startup')
+    const minimizeOnStartup = settingsDB.get('settings.minimizeOnStartup', false)
+
+    if (isStartup && minimizeOnStartup) {
+      // Started via auto-start with minimize option - hide to tray
+      mainWindow.hide()
+    }
 
     // Restore floating lyrics if it was enabled
     const lyricsEnabled = settingsDB.get('lyrics.enabled', false)

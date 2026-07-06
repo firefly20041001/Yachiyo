@@ -33,6 +33,7 @@ export function SettingsPage() {
   const [currentDevice, setCurrentDevice] = useState('default')
   const [followSystem, setFollowSystem] = useState(true)
   const [autoLaunch, setAutoLaunch] = useState(false)
+  const [minimizeOnStartup, setMinimizeOnStartup] = useState(false)
   const [lyrics, setLyrics] = useState({
     enabled: false, fontSize: 28, fontFamily: 'PingFang SC', color: '#ffffff',
     bgColor: 'rgba(0,0,0,0.3)', opacity: 0.9, translationEnabled: true,
@@ -52,7 +53,12 @@ export function SettingsPage() {
     window.api.settings.get('settings.closeAction', 'minimize').then((v) => setCloseAction(v))
     window.api.settings.get('settings.themeColor', '#DE89A8').then((v) => setThemeColor(v))
     window.api.settings.get('settings.followSystemDevice', true).then((v) => setFollowSystem(v))
-    window.api.settings.get('settings.autoLaunch', false).then((v) => setAutoLaunch(v))
+    window.api.settings.get('settings.autoLaunch', false).then((v) => {
+      setAutoLaunch(v)
+      // Apply on startup
+      window.api.settings.setAutoLaunch(v).catch(() => {})
+    })
+    window.api.settings.get('settings.minimizeOnStartup', false).then((v) => setMinimizeOnStartup(v))
     window.api.lyricsWindow.getSettings().then((s) => setLyrics(prev => ({ ...prev, ...s })))
     window.api.shortcuts.get().then((s) => setShortcuts(s))
     window.api.lyricsWindow.onSettingsChanged((s) => setLyrics(prev => ({ ...prev, ...s })))
@@ -119,7 +125,7 @@ export function SettingsPage() {
     setShortcuts(defaults)
   }
 
-  const CURRENT_VERSION = '2.0.0'
+  const CURRENT_VERSION = '2.0.1'
 
   const handleCheckUpdate = async () => {
     setCheckingUpdate(true)
@@ -413,10 +419,7 @@ export function SettingsPage() {
                   const newVal = !autoLaunch
                   setAutoLaunch(newVal)
                   await window.api.settings.set('settings.autoLaunch', newVal)
-                  // Apply via Electron API
-                  try {
-                    await window.api.settings.set('autoLaunch', newVal)
-                  } catch {}
+                  await window.api.settings.setAutoLaunch(newVal)
                 }}
               >
                 {autoLaunch ? '已开启' : '已关闭'}
@@ -429,7 +432,7 @@ export function SettingsPage() {
         <GlassPanel intensity="medium" className="settings-section">
           <h2 className="settings-section-title"><Info size={20} /> 关于</h2>
           <div className="settings-group">
-            <div className="setting-item"><div className="setting-label"><span>版本</span></div><span className="setting-value">2.0.0</span></div>
+            <div className="setting-item"><div className="setting-label"><span>版本</span></div><span className="setting-value">2.0.1</span></div>
             <div className="setting-item"><div className="setting-label"><span>技术栈</span></div><span className="setting-value">Electron + React + TypeScript</span></div>
             <div className="setting-item">
               <div className="setting-label">

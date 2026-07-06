@@ -32,7 +32,8 @@ const api: ElectronAPI = {
 
   settings: {
     get: (key, defaultValue) => ipcRenderer.invoke('settings:get', key, defaultValue),
-    set: (key, value) => ipcRenderer.invoke('settings:set', key, value)
+    set: (key, value) => ipcRenderer.invoke('settings:set', key, value),
+    setAutoLaunch: (enabled) => ipcRenderer.invoke('app:setAutoLaunch', enabled)
   },
 
   shortcuts: {
