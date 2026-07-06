@@ -10,7 +10,7 @@ files:
   - '!{electron.vite.config.ts}'
 win:
   executableName: Yachiyo
-  icon: resources/icon.ico
+  icon: resources/icon.png
   target:
     - target: nsis
       arch:
@@ -24,6 +24,6 @@ nsis:
   allowToChangeInstallationDirectory: true
   oneClick: false
   perMachine: false
-  installerIcon: resources/icon.ico
-  uninstallerIcon: resources/icon.ico
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
   include: build/installer.nsh

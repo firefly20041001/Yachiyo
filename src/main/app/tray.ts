@@ -48,10 +48,10 @@ function updateMenu(): void {
 
 export function createTray(): Tray {
   const possiblePaths = [
-    join(__dirname, '../../resources/icon.ico'),
-    join(__dirname, '../../../resources/icon.ico'),
-    join(process.cwd(), 'resources/icon.ico'),
-    join(process.cwd(), 'icon.ico')
+    join(__dirname, '../../resources/icon.png'),
+    join(__dirname, '../../../resources/icon.png'),
+    join(process.cwd(), 'resources/icon.png'),
+    join(process.cwd(), 'icon.png')
   ]
 
   let iconPath = ''

@@ -7,11 +7,11 @@ export function createMainWindow(): BrowserWindow {
 
   let iconPath: string | undefined
   const possiblePaths = [
-    join(__dirname, '../../resources/icon.ico'),
-    join(__dirname, '../../../resources/icon.ico'),
-    join(__dirname, '../../icon.ico'),
-    join(process.cwd(), 'resources/icon.ico'),
-    join(process.cwd(), 'icon.ico')
+    join(__dirname, '../../resources/icon.png'),
+    join(__dirname, '../../../resources/icon.png'),
+    join(__dirname, '../../icon.png'),
+    join(process.cwd(), 'resources/icon.png'),
+    join(process.cwd(), 'icon.png')
   ]
   for (const p of possiblePaths) {
     if (existsSync(p)) {

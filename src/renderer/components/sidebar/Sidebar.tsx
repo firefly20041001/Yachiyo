@@ -30,7 +30,7 @@ export function Sidebar({ onNavigate, activePage }: SidebarProps) {
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
     >
       <div className="sidebar-logo">
-        <img src="./icon.ico" alt="Yachiyo" className="logo-icon-img" style={{ width: 32, height: 32, borderRadius: 8 }} />
+        <img src="./icon.png" alt="Yachiyo" className="logo-icon-img" style={{ width: 32, height: 32, borderRadius: 8 }} />
         {!sidebarCollapsed && <span className="logo-text">Yachiyo</span>}
       </div>
 
