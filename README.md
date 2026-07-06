@@ -28,11 +28,11 @@ Unified · Fast · Beautiful
 
 | 首页                                                         | 歌词                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![](C:\Users\ASUS\Pictures\Screenshots\屏幕截图 2026-07-06 153407.png) | ![](C:\Users\ASUS\Pictures\Screenshots\屏幕截图 2026-07-06 153413.png) |
+| ![](\docs\screenshots\1.png) | ![](\docs\screenshots\2.png) |
 
 | 每日推荐                                                     | 设置                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![](C:\Users\ASUS\Pictures\Screenshots\屏幕截图 2026-07-06 153419.png) | ![](C:\Users\ASUS\Pictures\Screenshots\屏幕截图 2026-07-06 153424.png) |
+| ![](\docs\screenshots\3.png) | ![](\docs\screenshots\4.png) |
 
 # ✨ 功能特色
 
