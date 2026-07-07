@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Search, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useUIStore } from '../../stores/uiStore'
 
 interface SearchBarProps {
   onSearch: (query: string) => void
@@ -11,6 +12,7 @@ export function SearchBar({ onSearch, placeholder = '搜索歌曲、歌手、专
   const [query, setQuery] = useState('')
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { searchQuery } = useUIStore()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,6 +25,13 @@ export function SearchBar({ onSearch, placeholder = '搜索歌曲、歌手、专
     setQuery('')
     inputRef.current?.focus()
   }
+
+  // Sync searchQuery from store to local state
+  useEffect(() => {
+    if (searchQuery) {
+      setQuery(searchQuery)
+    }
+  }, [searchQuery])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

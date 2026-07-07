@@ -254,6 +254,16 @@
   text-overflow: ellipsis;
 }
 
+.artist-link {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.artist-link:hover {
+  color: var(--accent-primary);
+  text-decoration: underline;
+}
+
 .track-item-source {
   display: flex;
   justify-content: center;

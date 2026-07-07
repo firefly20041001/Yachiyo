@@ -1,9 +1,11 @@
-import React, { useState } from 'react'
-import { Play, Trash2, ListPlus, Check, Music, PlayCircle } from 'lucide-react'
+import React, { useState, useCallback } from 'react'
+import { Play, Trash2, ListPlus, Check, Music, PlayCircle, Copy, Info } from 'lucide-react'
 import { Track } from '@shared/types/streaming'
 import { SourceBadge } from './SourceBadge'
+import { ContextMenu } from './ContextMenu'
 import { usePlaybackStore } from '../../stores/playbackStore'
 import { usePlaylistStore } from '../../stores/playlistStore'
+import { useUIStore } from '../../stores/uiStore'
 import { addToPlayQueue } from '../../utils/audio'
 
 interface TrackItemProps {
@@ -23,6 +25,8 @@ export function TrackItem({ track, index, onPlay, onDelete, showIndex = true, sh
   const [menuOpen, setMenuOpen] = useState(false)
   const [addedId, setAddedId] = useState<string | null>(null)
   const [playNextDone, setPlayNextDone] = useState(false)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null)
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null)
 
   const formatDuration = (ms: number) => {
     const s = Math.floor(ms / 1000)
@@ -54,68 +58,142 @@ export function TrackItem({ track, index, onPlay, onDelete, showIndex = true, sh
     setMenuOpen(!menuOpen)
   }
 
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setContextMenu({ x: e.clientX, y: e.clientY })
+  }, [])
+
+  const copyToClipboard = useCallback(async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopyFeedback(label)
+      setTimeout(() => setCopyFeedback(null), 1500)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }, [])
+
+  const handleCopyName = useCallback(() => {
+    copyToClipboard(track.name, '歌名已复制')
+  }, [track.name, copyToClipboard])
+
+  const handleCopyInfo = useCallback(() => {
+    const info = `${track.name} - ${track.artists.join(', ')} (${track.albumName})`
+    copyToClipboard(info, '歌曲信息已复制')
+  }, [track, copyToClipboard])
+
+  const handleArtistClick = useCallback((e: React.MouseEvent, artistName: string) => {
+    e.stopPropagation()
+    const { setSearchQuery, setActivePage } = useUIStore.getState()
+    setSearchQuery(artistName, track.source)
+    setActivePage('search')
+  }, [track.source])
+
   return (
-    <div className={`track-item ${isActive ? 'track-item-active' : ''}`} onClick={() => onPlay(track)}>
-      <div className="track-item-index">
-        {isActive && isPlaying ? (
-          <div className="playing-indicator"><span /><span /><span /></div>
-        ) : showIndex ? (
-          <span className="track-index">{index + 1}</span>
-        ) : null}
-      </div>
+    <>
+      <div
+        className={`track-item ${isActive ? 'track-item-active' : ''}`}
+        onClick={() => onPlay(track)}
+        onContextMenu={handleContextMenu}
+      >
+        <div className="track-item-index">
+          {isActive && isPlaying ? (
+            <div className="playing-indicator"><span /><span /><span /></div>
+          ) : showIndex ? (
+            <span className="track-index">{index + 1}</span>
+          ) : null}
+        </div>
 
-      <div className="track-item-cover">
-        {track.albumCoverUrl ? (
-          <img src={track.albumCoverUrl} alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-        ) : null}
-        <div className="track-cover-placeholder"><Music size={16} /></div>
-        <div className="track-play-overlay"><Play size={16} fill="white" /></div>
-      </div>
+        <div className="track-item-cover">
+          {track.albumCoverUrl ? (
+            <img src={track.albumCoverUrl} alt="" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+          ) : null}
+          <div className="track-cover-placeholder"><Music size={16} /></div>
+          <div className="track-play-overlay"><Play size={16} fill="white" /></div>
+        </div>
 
-      <div className="track-item-info">
-        <div className="track-name">{track.name}</div>
-        <div className="track-artist">{track.artists.join(', ')}</div>
-      </div>
+        <div className="track-item-info">
+          <div className="track-name">{track.name}</div>
+          <div className="track-artist">
+            {track.artists.map((artist, i) => (
+              <React.Fragment key={i}>
+                {i > 0 && ', '}
+                <span
+                  className="artist-link"
+                  onClick={(e) => handleArtistClick(e, artist)}
+                >
+                  {artist}
+                </span>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
 
-      {showSource && <div className="track-item-source"><SourceBadge source={track.source} /></div>}
+        {showSource && <div className="track-item-source"><SourceBadge source={track.source} /></div>}
 
-      <div className="track-item-album">{track.albumName}</div>
-      <div className="track-item-duration">{formatDuration(track.duration)}</div>
+        <div className="track-item-album">{track.albumName}</div>
+        <div className="track-item-duration">{formatDuration(track.duration)}</div>
 
-      <div className={`track-item-actions ${menuOpen ? 'track-item-actions-visible' : ''}`}>
-        <div style={{ position: 'relative' }}>
-          <button className="track-action-btn" onClick={handleMenuOpen}>
-            <ListPlus size={14} />
-          </button>
-          {menuOpen && (
-            <div className="add-to-playlist-menu" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-              <button className="add-menu-item" onMouseDown={(e) => e.stopPropagation()} onClick={handlePlayNext}>
-                {playNextDone ? <><Check size={14} /> 已添加</> : <><PlayCircle size={14} /> 下一首播放</>}
-              </button>
-              <div className="add-menu-title">添加到歌单</div>
-              {playlists.length === 0 ? (
-                <div className="add-menu-empty">暂无歌单</div>
-              ) : (
-                playlists.map((p) => (
-                  <button
-                    key={p.id}
-                    className="add-menu-item"
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleAdd(p.id) }}
-                  >
-                    {addedId === p.id ? <><Check size={14} /> 已添加</> : p.name}
-                  </button>
-                ))
-              )}
-            </div>
+        <div className={`track-item-actions ${menuOpen ? 'track-item-actions-visible' : ''}`}>
+          <div style={{ position: 'relative' }}>
+            <button className="track-action-btn" onClick={handleMenuOpen}>
+              <ListPlus size={14} />
+            </button>
+            {menuOpen && (
+              <div className="add-to-playlist-menu" onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+                <button className="add-menu-item" onMouseDown={(e) => e.stopPropagation()} onClick={handlePlayNext}>
+                  {playNextDone ? <><Check size={14} /> 已添加</> : <><PlayCircle size={14} /> 下一首播放</>}
+                </button>
+                <div className="add-menu-title">添加到歌单</div>
+                {playlists.length === 0 ? (
+                  <div className="add-menu-empty">暂无歌单</div>
+                ) : (
+                  playlists.map((p) => (
+                    <button
+                      key={p.id}
+                      className="add-menu-item"
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleAdd(p.id) }}
+                    >
+                      {addedId === p.id ? <><Check size={14} /> 已添加</> : p.name}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+          {onDelete && (
+            <button className="track-action-btn" onClick={(e) => { e.stopPropagation(); onDelete(track) }}>
+              <Trash2 size={14} />
+            </button>
           )}
         </div>
-        {onDelete && (
-          <button className="track-action-btn" onClick={(e) => { e.stopPropagation(); onDelete(track) }}>
-            <Trash2 size={14} />
-          </button>
-        )}
       </div>
-    </div>
+
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={() => setContextMenu(null)}
+          items={[
+            {
+              icon: <Copy size={14} />,
+              label: '复制歌名',
+              onClick: handleCopyName
+            },
+            {
+              icon: <Info size={14} />,
+              label: '复制歌曲信息',
+              onClick: handleCopyInfo
+            }
+          ]}
+        />
+      )}
+
+      {copyFeedback && (
+        <div className="copy-feedback">{copyFeedback}</div>
+      )}
+    </>
   )
 }

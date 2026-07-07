@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { Layout } from './app/Layout'
 import { HomePage } from './pages/HomePage'
 import { SearchPage } from './pages/SearchPage'
@@ -56,7 +56,7 @@ function TrayAndShortcutHandler() {
 }
 
 export default function App() {
-  const [activePage, setActivePage] = useState('home')
+  const { activePage, setActivePage } = useUIStore()
   const { refreshAccounts } = useAccountStore()
   const { theme } = useUIStore()
 

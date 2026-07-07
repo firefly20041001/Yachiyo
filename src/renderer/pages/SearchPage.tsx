@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Search, TrendingUp, Music } from 'lucide-react'
 import { MusicSource, Track } from '@shared/types/streaming'
 import { useSearch } from '../hooks/useSearch'
 import { usePlayback } from '../hooks/usePlayback'
+import { useUIStore } from '../stores/uiStore'
 import { SearchBar } from '../components/common/SearchBar'
 import { TrackList } from '../components/common/TrackList'
 import { GlassPanel } from '../components/common/GlassPanel'
@@ -11,15 +12,31 @@ import { GlassPanel } from '../components/common/GlassPanel'
 export function SearchPage() {
   const { results, isLoading, error, search } = useSearch()
   const { playTrack, playQueue } = usePlayback()
+  const { searchQuery, searchSource, clearSearchQuery } = useUIStore()
   const [activeSource, setActiveSource] = useState<MusicSource>('qqmusic')
   const [toplist, setToplist] = useState<Track[]>([])
   const [toplistLoading, setToplistLoading] = useState(false)
   const [showToplist, setShowToplist] = useState(true)
+  const processedQueryRef = useRef<string | null>(null)
 
   const handleSearch = (query: string) => {
     setShowToplist(false)
     search(query, activeSource)
   }
+
+  // Handle search query from store (e.g., when clicking artist name)
+  useEffect(() => {
+    if (searchQuery && processedQueryRef.current !== searchQuery) {
+      processedQueryRef.current = searchQuery
+      if (searchSource) {
+        setActiveSource(searchSource)
+      }
+      setShowToplist(false)
+      search(searchQuery, searchSource || activeSource)
+      // Clear after a small delay to avoid re-triggering
+      setTimeout(() => clearSearchQuery(), 100)
+    }
+  }, [searchQuery, searchSource])
 
   const handlePlayTrack = (track: any, index: number) => {
     if (results?.tracks) playQueue(results.tracks, index, { page: 'search' })

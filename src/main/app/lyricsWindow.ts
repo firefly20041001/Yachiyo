@@ -1,6 +1,5 @@
-import { BrowserWindow, ipcMain, screen } from 'electron'
+import { BrowserWindow, ipcMain, screen, app } from 'electron'
 import { join } from 'path'
-import { is } from '@electron-toolkit/utils'
 import { settingsDB } from '../database'
 
 let lyricsWindow: BrowserWindow | null = null
@@ -41,7 +40,8 @@ export function createLyricsWindow(): BrowserWindow | null {
 
   if (settings.locked) lyricsWindow.setIgnoreMouseEvents(true)
 
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+  const isDev = !app.isPackaged
+  if (isDev && process.env['ELECTRON_RENDERER_URL']) {
     lyricsWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] + '/lyrics.html')
   } else {
     lyricsWindow.loadFile(join(__dirname, '../renderer/lyrics.html'))
