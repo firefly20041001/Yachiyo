@@ -65,7 +65,9 @@
 /* Progress Bar */
 .progress-bar-container {
   position: absolute;
-  top: -3px;
+  /* Sit exactly on the bar's top edge so the line reads as the bar's top
+     border; hanging above it (top: -3px) exposed page content in the seam */
+  top: 0;
   left: 0;
   right: 0;
   display: flex;
