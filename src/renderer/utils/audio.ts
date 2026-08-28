@@ -216,7 +216,10 @@ export function initAudio() {
   })
 
   usePlaybackStore.subscribe((state) => {
-    audio.volume = state.isMuted ? 0 : state.volume
+    const volume = state.isMuted ? 0 : state.volume
+    if (audio.volume !== volume) {
+      audio.volume = volume
+    }
   })
 }
 

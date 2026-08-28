@@ -8,6 +8,7 @@ import { ProgressBar } from './ProgressBar'
 import { VolumeControl } from './VolumeControl'
 import { usePlayback } from '../../hooks/usePlayback'
 import { FullScreenLyrics } from '../lyrics/FullScreenLyrics'
+import { getCoverUrl } from '../../utils/cover'
 import { Track, QualityLevel } from '@shared/types/streaming'
 
 export function PlayerBar() {
@@ -73,7 +74,7 @@ export function PlayerBar() {
           <div className="player-track-info" onClick={() => setShowLyrics(true)} style={{ cursor: 'pointer' }}>
             <div className="player-track-cover">
               {currentTrack?.albumCoverUrl ? (
-                <img src={currentTrack.albumCoverUrl} alt="" />
+                <img src={getCoverUrl(currentTrack.albumCoverUrl, 100)} alt="" />
               ) : (
                 <div className="player-cover-placeholder"><Music size={20} /></div>
               )}

@@ -5,6 +5,7 @@ import { usePlaybackStore } from '../../stores/playbackStore'
 import { usePlayback } from '../../hooks/usePlayback'
 import { PlayerControls } from '../player/PlayerControls'
 import { ProgressBar } from '../player/ProgressBar'
+import { getCoverUrl } from '../../utils/cover'
 
 interface FullScreenLyricsProps {
   isOpen: boolean
@@ -57,7 +58,7 @@ export function FullScreenLyrics({ isOpen, onClose }: FullScreenLyricsProps) {
         >
           <div className="fullscreen-lyrics-bg">
             {currentTrack?.albumCoverUrl && (
-              <img src={currentTrack.albumCoverUrl} alt="" className="fullscreen-lyrics-bg-img" />
+              <img src={getCoverUrl(currentTrack.albumCoverUrl, 300)} alt="" className="fullscreen-lyrics-bg-img" />
             )}
             <div className="fullscreen-lyrics-bg-overlay" />
           </div>
@@ -73,7 +74,7 @@ export function FullScreenLyrics({ isOpen, onClose }: FullScreenLyricsProps) {
                 className={`fullscreen-lyrics-cover ${isPlaying ? 'spinning' : ''}`}
               >
                 {currentTrack?.albumCoverUrl ? (
-                  <img src={currentTrack.albumCoverUrl} alt={currentTrack.albumName} />
+                  <img src={getCoverUrl(currentTrack.albumCoverUrl, 300)} alt={currentTrack.albumName} />
                 ) : (
                   <div className="fullscreen-lyrics-cover-placeholder"><Music size={64} /></div>
                 )}

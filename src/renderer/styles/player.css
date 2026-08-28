@@ -10,8 +10,8 @@
   right: 0;
   height: 80px;
   background: var(--player-bg);
-  backdrop-filter: blur(60px) saturate(200%);
-  -webkit-backdrop-filter: blur(60px) saturate(200%);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
   border-top: 1px solid var(--border-color-light);
   z-index: 999;
 }
@@ -431,8 +431,8 @@
   width: 360px;
   height: 100%;
   background: var(--bg-elevated);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
   border-left: 1px solid var(--border-color-light);
   display: flex;
   flex-direction: column;
@@ -540,8 +540,8 @@
   width: 360px;
   height: 100%;
   background: var(--bg-elevated);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
   border-left: 1px solid var(--border-color-light);
   display: flex;
   flex-direction: column;
