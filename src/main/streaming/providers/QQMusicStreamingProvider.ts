@@ -142,6 +142,9 @@ export class QQMusicStreamingProvider extends StreamingProvider {
 
       const body = res?.req_1?.data?.body || {}
       const songList = body.song?.list || []
+      // QQ doesn't return a reliable totalnum; a full page means more pages
+      // likely exist
+      const total = body.song?.totalnum || songList.length
 
       return {
         tracks: songList.map((s: any) => this.mapTrack(s)),
@@ -153,12 +156,15 @@ export class QQMusicStreamingProvider extends StreamingProvider {
           id: a.singerMid || a.mid || '', source: 'qqmusic' as MusicSource, name: a.singerName || a.name || '', avatarUrl: a.singerPic || ''
         })),
         playlists: [],
-        total: body.song?.totalnum || songList.length,
+        total: total,
+        hasMore: body.song?.totalnum
+          ? offset + songList.length < body.song.totalnum
+          : songList.length >= limit,
         source: 'qqmusic'
       }
     } catch (err) {
       console.error('QQ Music search error:', err)
-      return { tracks: [], albums: [], artists: [], playlists: [], total: 0, source: 'qqmusic' }
+      return { tracks: [], albums: [], artists: [], playlists: [], total: 0, hasMore: false, source: 'qqmusic' }
     }
   }
 

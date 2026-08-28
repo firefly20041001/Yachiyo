@@ -55,6 +55,9 @@ export interface SearchResult {
   artists: Artist[]
   playlists: Playlist[]
   total: number
+  // Whether another page exists beyond this one. Sources that don't report a
+  // real total (QQ) set this from "page was full" instead of total
+  hasMore: boolean
   source: MusicSource
 }
 

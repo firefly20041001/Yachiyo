@@ -135,7 +135,12 @@ export function SearchPage() {
         <motion.div className="search-results" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {results.tracks.length > 0 ? (
             <div className="results-section">
-              <h2 className="section-title">歌曲 ({results.total})</h2>
+              <h2 className="section-title">
+                歌曲 (
+                {results.total > results.tracks.length
+                  ? `已加载 ${results.tracks.length}/${results.total}`
+                  : results.tracks.length})
+              </h2>
               <TrackList tracks={results.tracks} onPlay={handlePlayTrack} />
               {hasMore && (
                 <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0' }}>

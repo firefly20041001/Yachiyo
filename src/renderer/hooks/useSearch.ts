@@ -48,8 +48,7 @@ export function useSearch(): UseSearchReturn {
 
   const loadMore = useCallback(async () => {
     const last = lastQueryRef.current
-    if (!last || isLoadingMore || !results) return
-    if (results.tracks.length >= results.total) return
+    if (!last || isLoadingMore || !results || !results.hasMore) return
 
     setIsLoadingMore(true)
     setError(null)
@@ -69,7 +68,7 @@ export function useSearch(): UseSearchReturn {
         // Sources occasionally repeat items across pages
         const seen = new Set(prev.tracks.map(t => `${t.source}:${t.id}`))
         const fresh = more.tracks.filter(t => !seen.has(`${t.source}:${t.id}`))
-        return { ...prev, tracks: [...prev.tracks, ...fresh] }
+        return { ...prev, tracks: [...prev.tracks, ...fresh], total: more.total, hasMore: more.hasMore }
       })
     } catch (err: any) {
       setError(err.message || '加载更多失败')
@@ -84,7 +83,7 @@ export function useSearch(): UseSearchReturn {
     lastQueryRef.current = null
   }, [])
 
-  const hasMore = !!results && results.tracks.length > 0 && results.tracks.length < results.total
+  const hasMore = !!results && results.tracks.length > 0 && results.hasMore
 
   return { results, isLoading, isLoadingMore, hasMore, error, search, loadMore, clearResults }
 }
