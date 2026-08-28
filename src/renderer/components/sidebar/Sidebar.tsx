@@ -26,12 +26,12 @@ export function Sidebar({ onNavigate, activePage }: SidebarProps) {
   return (
     <motion.aside
       className={`sidebar ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}
-      animate={{ width: sidebarCollapsed ? 72 : 240 }}
+      animate={{ width: sidebarCollapsed ? 88 : 240 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
     >
       <div className="sidebar-logo">
         <img src="./icon.png" alt="Yachiyo" className="logo-icon-img" style={{ width: 32, height: 32, borderRadius: 8 }} />
-        {!sidebarCollapsed && <span className="logo-text">Yachiyo</span>}
+        <span className="logo-text">Yachiyo</span>
       </div>
 
       <nav className="sidebar-nav">
@@ -44,30 +44,37 @@ export function Sidebar({ onNavigate, activePage }: SidebarProps) {
             whileTap={{ scale: 0.98 }}
           >
             <item.icon size={20} />
-            {!sidebarCollapsed && <span className="nav-label">{item.label}</span>}
+            <span className="nav-label">{item.label}</span>
           </motion.button>
         ))}
       </nav>
 
-      {!sidebarCollapsed && (
-        <div className="sidebar-accounts">
-          <div className="account-status">
-            <div className={`account-dot ${accounts.netease ? 'account-dot-active netease' : ''}`} />
-            <span>网易云</span>
-          </div>
-          <div className="account-status">
-            <div className={`account-dot ${accounts.qqmusic ? 'account-dot-active qqmusic' : ''}`} />
-            <span>QQ音乐</span>
-          </div>
+      <div className="sidebar-accounts">
+        <div className="account-status">
+          <div className={`account-dot ${accounts.netease ? 'account-dot-active netease' : ''}`} />
+          <span>网易云</span>
         </div>
-      )}
+        <div className="account-status">
+          <div className={`account-dot ${accounts.qqmusic ? 'account-dot-active qqmusic' : ''}`} />
+          <span>QQ音乐</span>
+        </div>
+      </div>
 
       <div className="sidebar-bottom">
-        <button className="sidebar-btn" onClick={toggleTheme}>
+        <button
+          className="sidebar-btn"
+          onClick={toggleTheme}
+          title={theme === 'dark' ? '切换到浅色主题' : '切换到深色主题'}
+        >
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </button>
-        <button className="sidebar-btn sidebar-collapse-btn" onClick={toggleSidebar}>
+        <button
+          className="sidebar-btn sidebar-collapse-btn"
+          onClick={toggleSidebar}
+          title={sidebarCollapsed ? '展开侧栏' : '折叠侧栏'}
+        >
           {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          <span className="sidebar-btn-label">折叠侧栏</span>
         </button>
       </div>
     </motion.aside>

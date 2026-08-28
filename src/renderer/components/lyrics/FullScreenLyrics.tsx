@@ -5,6 +5,7 @@ import { usePlaybackStore } from '../../stores/playbackStore'
 import { usePlayback } from '../../hooks/usePlayback'
 import { PlayerControls } from '../player/PlayerControls'
 import { ProgressBar } from '../player/ProgressBar'
+import { getCoverUrl } from '../../utils/cover'
 
 interface FullScreenLyricsProps {
   isOpen: boolean
@@ -14,7 +15,6 @@ interface FullScreenLyricsProps {
 export function FullScreenLyrics({ isOpen, onClose }: FullScreenLyricsProps) {
   const currentTrack = usePlaybackStore((s) => s.currentTrack)
   const isPlaying = usePlaybackStore((s) => s.isPlaying)
-  const currentTime = usePlaybackStore((s) => s.currentTime)
   const duration = usePlaybackStore((s) => s.duration)
   const lyrics = usePlaybackStore((s) => s.lyrics)
   const currentLyricIndex = usePlaybackStore((s) => s.currentLyricIndex)
@@ -58,7 +58,7 @@ export function FullScreenLyrics({ isOpen, onClose }: FullScreenLyricsProps) {
         >
           <div className="fullscreen-lyrics-bg">
             {currentTrack?.albumCoverUrl && (
-              <img src={currentTrack.albumCoverUrl} alt="" className="fullscreen-lyrics-bg-img" />
+              <img src={getCoverUrl(currentTrack.albumCoverUrl, 300)} alt="" className="fullscreen-lyrics-bg-img" />
             )}
             <div className="fullscreen-lyrics-bg-overlay" />
           </div>
@@ -74,7 +74,7 @@ export function FullScreenLyrics({ isOpen, onClose }: FullScreenLyricsProps) {
                 className={`fullscreen-lyrics-cover ${isPlaying ? 'spinning' : ''}`}
               >
                 {currentTrack?.albumCoverUrl ? (
-                  <img src={currentTrack.albumCoverUrl} alt={currentTrack.albumName} />
+                  <img src={getCoverUrl(currentTrack.albumCoverUrl, 300)} alt={currentTrack.albumName} />
                 ) : (
                   <div className="fullscreen-lyrics-cover-placeholder"><Music size={64} /></div>
                 )}
@@ -115,7 +115,7 @@ export function FullScreenLyrics({ isOpen, onClose }: FullScreenLyricsProps) {
           </div>
 
           <div className="fullscreen-lyrics-bottom">
-            <ProgressBar currentTime={currentTime} duration={duration} onSeek={seek} />
+            <ProgressBar duration={duration} onSeek={seek} />
             <PlayerControls onTogglePlay={togglePlay} onNext={nextTrack} onPrev={prevTrack} variant="light" />
           </div>
         </motion.div>

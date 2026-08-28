@@ -1,3 +1,4 @@
+import { ListeningEvent, UserProfile } from '@shared/types/listening'
 import { app } from 'electron'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
@@ -168,5 +169,71 @@ export const settingsDB = {
   set(key: string, value: any): void {
     settingsCache[key] = value
     saveSettings()
+  }
+}
+
+
+// Listening data store (events + profile)
+interface ListeningStoreSchema {
+  events: ListeningEvent[]
+  profile: UserProfile | null
+}
+
+let listeningCache: ListeningStoreSchema | null = null
+
+function getListeningPath(): string {
+  return join(getDataDir(), 'listening.json')
+}
+
+function loadListeningStore(): ListeningStoreSchema {
+  if (listeningCache) return listeningCache
+
+  const p = getListeningPath()
+  if (existsSync(p)) {
+    try {
+      listeningCache = JSON.parse(readFileSync(p, 'utf-8'))
+    } catch {
+      listeningCache = { events: [], profile: null }
+    }
+  } else {
+    listeningCache = { events: [], profile: null }
+  }
+
+  return listeningCache
+}
+
+function saveListeningStore(): void {
+  if (!listeningCache) return
+  writeFileSync(getListeningPath(), JSON.stringify(listeningCache, null, 2), 'utf-8')
+}
+
+export const listeningDB = {
+  addEvent(event: ListeningEvent): void {
+    const store = loadListeningStore()
+    store.events.push(event)
+    // Keep last 2000 events
+    if (store.events.length > 2000) {
+      store.events.splice(0, store.events.length - 2000)
+    }
+    saveListeningStore()
+  },
+
+  getEvents(): ListeningEvent[] {
+    return loadListeningStore().events
+  },
+
+  getProfile(): UserProfile | null {
+    return loadListeningStore().profile
+  },
+
+  setProfile(profile: UserProfile): void {
+    const store = loadListeningStore()
+    store.profile = profile
+    saveListeningStore()
+  },
+
+  clear(): void {
+    listeningCache = { events: [], profile: null }
+    saveListeningStore()
   }
 }

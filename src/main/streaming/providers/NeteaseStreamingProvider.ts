@@ -89,6 +89,7 @@ export class NeteaseStreamingProvider extends StreamingProvider {
       )
 
       const songs = res?.result?.songs || []
+      const total = res?.result?.songCount || songs.length
       return {
         tracks: songs.map((s: any) => this.mapTrack(s)),
         albums: (res?.result?.albums || []).map((a: any) => ({
@@ -103,12 +104,13 @@ export class NeteaseStreamingProvider extends StreamingProvider {
           description: p.description || '', coverUrl: p.coverImgUrl || '',
           trackCount: p.trackCount || 0, creatorName: p.creator?.nickname || '', creatorId: String(p.creator?.userId || '')
         })),
-        total: res?.result?.songCount || songs.length,
+        total: total,
+        hasMore: offset + songs.length < total,
         source: 'netease'
       }
     } catch (err) {
       console.error('NetEase search error:', err)
-      return { tracks: [], albums: [], artists: [], playlists: [], total: 0, source: 'netease' }
+      return { tracks: [], albums: [], artists: [], playlists: [], total: 0, hasMore: false, source: 'netease' }
     }
   }
 

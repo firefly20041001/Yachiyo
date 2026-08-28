@@ -10,8 +10,8 @@
   right: 0;
   height: 80px;
   background: var(--player-bg);
-  backdrop-filter: blur(60px) saturate(200%);
-  -webkit-backdrop-filter: blur(60px) saturate(200%);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
   border-top: 1px solid var(--border-color-light);
   z-index: 999;
 }
@@ -50,12 +50,24 @@
   justify-content: space-between;
   padding: 0 20px;
   z-index: 1;
+  /* The content row spans the full bar height and would block clicks on
+     the progress strip (z-index: 0) underneath; empty padding areas must
+     pass clicks through to it */
+  pointer-events: none;
+}
+
+.player-track-info,
+.player-controls,
+.player-right {
+  pointer-events: auto;
 }
 
 /* Progress Bar */
 .progress-bar-container {
   position: absolute;
-  top: -3px;
+  /* Sit exactly on the bar's top edge so the line reads as the bar's top
+     border; hanging above it (top: -3px) exposed page content in the seam */
+  top: 0;
   left: 0;
   right: 0;
   display: flex;
@@ -64,7 +76,9 @@
   padding: 0 20px;
   height: 16px;
   pointer-events: none;
-  z-index: 10;
+  /* Must stay below .player-bar-content (z-index: 1) so popups opening
+     upward from the content row (quality menu) are not covered */
+  z-index: 0;
 }
 
 .progress-time {
@@ -360,6 +374,21 @@
   color: var(--accent-primary);
 }
 
+/* Quality Menu */
+.quality-menu {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  z-index: 100;
+  min-width: 80px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 4px;
+}
+
 .player-lyrics-btn {
   font-size: 16px;
   font-weight: 700;
@@ -416,8 +445,8 @@
   width: 360px;
   height: 100%;
   background: var(--bg-elevated);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
   border-left: 1px solid var(--border-color-light);
   display: flex;
   flex-direction: column;
@@ -525,8 +554,8 @@
   width: 360px;
   height: 100%;
   background: var(--bg-elevated);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
   border-left: 1px solid var(--border-color-light);
   display: flex;
   flex-direction: column;

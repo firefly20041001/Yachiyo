@@ -89,12 +89,14 @@ export class PlaylistService {
     const remotePlaylist = await provider.getPlaylist(record.sourcePlaylistId)
     const remoteTracks = remotePlaylist.tracks || []
 
-    // Separate existing tracks by origin
-    const manualTracks = record.tracks.filter((t) => t.origin === 'manual')
+    if (remotePlaylist.name) record.name = remotePlaylist.name
+    if (remotePlaylist.coverUrl) record.coverUrl = remotePlaylist.coverUrl
+
     const importedTracks = record.tracks.filter((t) => t.origin === 'import')
 
     // Build set of remote track IDs
     const remoteTrackIds = new Set(remoteTracks.map((t) => t.id))
+    const remoteTrackById = new Map(remoteTracks.map((t) => [t.id, t]))
 
     // Find new tracks (in remote but not in imported)
     const existingImportedIds = new Set(importedTracks.map((t) => t.trackId))
@@ -103,9 +105,26 @@ export class PlaylistService {
     // Find removed tracks (in imported but not in remote)
     const removedTracks = importedTracks.filter((t) => !remoteTrackIds.has(t.trackId))
 
-    // Build new imported track records
+    // Keep the stored order for all existing tracks while refreshing imported metadata.
+    const existingTracks = record.tracks.filter(
+      (t) => t.origin === 'manual' || remoteTrackIds.has(t.trackId)
+    )
+    for (const existingTrack of existingTracks) {
+      if (existingTrack.origin !== 'import') continue
+
+      const remoteTrack = remoteTrackById.get(existingTrack.trackId)
+      if (!remoteTrack) continue
+
+      existingTrack.trackName = remoteTrack.name
+      existingTrack.trackArtists = JSON.stringify(remoteTrack.artists)
+      existingTrack.trackAlbum = remoteTrack.albumName
+      existingTrack.trackCover = remoteTrack.albumCoverUrl
+      existingTrack.trackDuration = remoteTrack.duration
+    }
+
+    // Prepend newly discovered tracks.
     const now = Date.now()
-    const newImportedTracks = remoteTracks.map((track) => ({
+    const newImportedTracks = newTracks.map((track) => ({
       trackId: track.id,
       trackSource: track.source,
       trackName: track.name,
@@ -118,8 +137,7 @@ export class PlaylistService {
       addedAt: now
     }))
 
-    // Combine: new imported tracks + manual tracks
-    record.tracks = [...newImportedTracks, ...manualTracks]
+    record.tracks = [...newImportedTracks, ...existingTracks]
     record.lastSyncedAt = now
 
     playlistDB.set(playlistId, record)

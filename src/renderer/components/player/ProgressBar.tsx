@@ -1,12 +1,13 @@
 import React, { useCallback, useRef, useState, useEffect } from 'react'
+import { usePlaybackStore } from '../../stores/playbackStore'
 
 interface ProgressBarProps {
-  currentTime: number
   duration: number
   onSeek: (time: number) => void
 }
 
-export function ProgressBar({ currentTime, duration, onSeek }: ProgressBarProps) {
+export function ProgressBar({ duration, onSeek }: ProgressBarProps) {
+  const currentTime = usePlaybackStore((s) => s.currentTime)
   const barRef = useRef<HTMLDivElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [dragTime, setDragTime] = useState(0)

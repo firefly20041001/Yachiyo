@@ -25,6 +25,8 @@ function applyAudioDevice() {
 
 let initialized = false
 let lastLyricIndex = -1
+let lastTimeUpdateAt = 0
+let restoreStarted = false
 
 // ---- Media Session ----
 
@@ -92,7 +94,7 @@ async function playTrackDirect(track: Track) {
 
     usePlaybackStore.getState().setCurrentTrack(track)
 
-    const info = await window.api.streaming.resolvePlayback(track.source, track.id, 'standard')
+    const info = await window.api.streaming.resolvePlayback(track.source, track.id, usePlaybackStore.getState().quality || 'standard')
     console.log('[Playback] URL:', info.url.substring(0, 100))
     usePlaybackStore.getState().setPlaybackInfo(info)
 
@@ -154,25 +156,33 @@ export function initAudio() {
   setupMediaSessionHandlers()
 
   audio.addEventListener('timeupdate', () => {
-    usePlaybackStore.getState().setCurrentTime(audio.currentTime)
+    const now = performance.now()
+    if (now - lastTimeUpdateAt < 500) return
+    lastTimeUpdateAt = now
 
-    const { lyrics } = usePlaybackStore.getState()
+    const state = usePlaybackStore.getState()
+    state.setCurrentTime(audio.currentTime)
+
+    const { lyrics } = state
     if (lyrics?.lines.length) {
-      let index = -1
-      for (let i = 0; i < lyrics.lines.length; i++) {
-        if (lyrics.lines[i].time <= audio.currentTime * 1000) index = i
+      const timeMs = audio.currentTime * 1000
+      // Binary search: find last line with time <= timeMs
+      let lo = 0, hi = lyrics.lines.length - 1, index = -1
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1
+        if (lyrics.lines[mid].time <= timeMs) { index = mid; lo = mid + 1 }
+        else hi = mid - 1
       }
-      if (index !== usePlaybackStore.getState().currentLyricIndex) {
-        usePlaybackStore.getState().setCurrentLyricIndex(index)
+      if (index !== state.currentLyricIndex) {
+        state.setCurrentLyricIndex(index)
       }
-    }
 
-    const { lyrics: l, currentLyricIndex } = usePlaybackStore.getState()
-    if (l && currentLyricIndex >= 0 && currentLyricIndex !== lastLyricIndex) {
-      lastLyricIndex = currentLyricIndex
-      const line = l.lines[currentLyricIndex]
-      if (line) {
-        try { window.api.lyricsWindow.updateLine(line.text, line.translation) } catch {}
+      if (index >= 0 && index !== lastLyricIndex) {
+        lastLyricIndex = index
+        const line = lyrics.lines[index]
+        if (line) {
+          try { window.api.lyricsWindow.updateLine(line.text, line.translation) } catch {}
+        }
       }
     }
   })
@@ -195,18 +205,21 @@ export function initAudio() {
 
   audio.addEventListener('ended', () => {
     const track = usePlaybackStore.getState().currentTrack
-    if (track) saveListeningEvent(createListeningEvent(track, true, false, track.duration))
+    if (track) saveListeningEvent(createListeningEvent(track, true, false, track.duration)).catch(() => {})
     skipToNextSilent()
   })
 
   audio.addEventListener('error', () => {
     const track = usePlaybackStore.getState().currentTrack
-    if (track) saveListeningEvent(createListeningEvent(track, false, true, audio.currentTime * 1000))
+    if (track) saveListeningEvent(createListeningEvent(track, false, true, audio.currentTime * 1000)).catch(() => {})
     skipToNextSilent()
   })
 
   usePlaybackStore.subscribe((state) => {
-    audio.volume = state.isMuted ? 0 : state.volume
+    const volume = state.isMuted ? 0 : state.volume
+    if (audio.volume !== volume) {
+      audio.volume = volume
+    }
   })
 }
 
@@ -255,7 +268,7 @@ export function setVolume(volume: number) { usePlaybackStore.getState().setVolum
 
 export function nextTrack() {
   const current = usePlaybackStore.getState().currentTrack
-  if (current) saveListeningEvent(createListeningEvent(current, false, true, audio.currentTime * 1000))
+  if (current) saveListeningEvent(createListeningEvent(current, false, true, audio.currentTime * 1000)).catch(() => {})
   const store = usePlaybackStore.getState()
   const next = store.advanceToNext()
   if (next) playTrackDirect(next).catch(() => skipToNextSilent())
@@ -283,6 +296,9 @@ export function stopAndClear() {
 }
 
 export function restoreLastTrack() {
+  if (restoreStarted) return
+  restoreStarted = true
+
   const state = usePlaybackStore.getState()
   if (!state.currentTrack) return
 
@@ -293,7 +309,7 @@ export function restoreLastTrack() {
 
   // Restore the track (without auto-playing)
   // Set the audio source so the track is ready to play
-  window.api.streaming.resolvePlayback(state.currentTrack.source, state.currentTrack.id, 'standard')
+  window.api.streaming.resolvePlayback(state.currentTrack.source, state.currentTrack.id, usePlaybackStore.getState().quality || 'standard')
     .then((info) => {
       audio.src = info.url
       audio.volume = state.isMuted ? 0 : state.volume

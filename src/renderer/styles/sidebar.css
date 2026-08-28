@@ -5,21 +5,32 @@
 
 .sidebar {
   width: 240px;
-  height: 100%;
+  /* End above the fixed player bar (80px) so the bottom controls
+     (theme / collapse) are not covered by it */
+  height: calc(100% - 80px);
   display: flex;
   flex-direction: column;
   padding: 12px;
   padding-top: 16px;
   background: var(--sidebar-bg);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
   border-right: 1px solid var(--border-color-light);
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* No CSS width transition here: framer-motion drives the collapse
+     animation, a CSS transition would fight it frame by frame.
+     Labels stay mounted and are clipped here while width animates */
+  overflow: hidden;
   z-index: 20;
 }
 
-.sidebar-collapsed {
-  align-items: center;
+/* Collapsed rail: 88px wide, icons centered. Centering is done with
+   animated padding (not align/justify flips) so nothing jumps when the
+   class flips at animation start. gap must go to 0 when the label is
+   hidden — a zero-width label still occupies the gap, which would
+   flex-shrink the icon */
+.sidebar-collapsed .sidebar-logo {
+  padding: 8px 16px;
+  gap: 0;
 }
 
 /* Logo */
@@ -29,6 +40,11 @@
   gap: 12px;
   padding: 8px 12px;
   margin-bottom: 24px;
+  transition: padding 0.3s ease;
+}
+
+.sidebar-logo img {
+  flex-shrink: 0;
 }
 
 .logo-icon {
@@ -50,6 +66,14 @@
   font-weight: 700;
   letter-spacing: -0.02em;
   white-space: nowrap;
+  max-width: 150px;
+  overflow: hidden;
+  transition: max-width 0.25s ease, opacity 0.2s ease;
+}
+
+.sidebar-collapsed .logo-text {
+  max-width: 0;
+  opacity: 0;
 }
 
 /* Navigation */
@@ -77,6 +101,10 @@
   position: relative;
 }
 
+.nav-item svg {
+  flex-shrink: 0;
+}
+
 .nav-item:hover {
   background: var(--glass-bg);
   color: var(--text-primary);
@@ -102,15 +130,21 @@
 
 .nav-label {
   flex: 1;
-}
-
-.sidebar-collapsed .nav-item {
-  justify-content: center;
-  padding: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 160px;
+  transition: max-width 0.25s ease, opacity 0.2s ease;
 }
 
 .sidebar-collapsed .nav-label {
-  display: none;
+  max-width: 0;
+  opacity: 0;
+}
+
+.sidebar-collapsed .nav-item {
+  /* (64 inner - 20 icon) / 2 = 22px left padding centers the icon */
+  padding: 10px 22px 10px 22px;
+  gap: 0;
 }
 
 /* Account Status */
@@ -118,6 +152,12 @@
   padding: 12px 0;
   border-top: 1px solid var(--border-color-light);
   margin-top: 8px;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-collapsed .sidebar-accounts {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .account-status {
@@ -127,6 +167,7 @@
   padding: 6px 12px;
   font-size: 12px;
   color: var(--text-tertiary);
+  white-space: nowrap;
 }
 
 .account-dot {
@@ -177,12 +218,36 @@
 
 .sidebar-collapse-btn {
   margin-left: auto;
+  width: auto;
+  gap: 6px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.sidebar-btn-label {
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  transition: max-width 0.25s ease, opacity 0.2s ease;
+}
+
+.sidebar-collapsed .sidebar-btn-label {
+  max-width: 0;
+  opacity: 0;
 }
 
 .sidebar-collapsed .sidebar-bottom {
   flex-direction: column;
+  align-items: center;
 }
 
 .sidebar-collapsed .sidebar-collapse-btn {
   margin-left: 0;
+  /* Match the theme button: clean 36px icon button once the label has
+     collapsed away (box shrinks smoothly with the max-width animation) */
+  padding: 0;
+  gap: 0;
+  min-width: 36px;
+  justify-content: center;
 }

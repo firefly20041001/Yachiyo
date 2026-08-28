@@ -10,7 +10,7 @@ import { TrackList } from '../components/common/TrackList'
 import { GlassPanel } from '../components/common/GlassPanel'
 
 export function SearchPage() {
-  const { results, isLoading, error, search } = useSearch()
+  const { results, isLoading, isLoadingMore, hasMore, error, search, loadMore } = useSearch()
   const { playTrack, playQueue } = usePlayback()
   const { searchQuery, searchSource, clearSearchQuery } = useUIStore()
   const [activeSource, setActiveSource] = useState<MusicSource>('qqmusic')
@@ -135,8 +135,20 @@ export function SearchPage() {
         <motion.div className="search-results" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {results.tracks.length > 0 ? (
             <div className="results-section">
-              <h2 className="section-title">歌曲 ({results.total})</h2>
+              <h2 className="section-title">
+                歌曲 (
+                {results.total > results.tracks.length
+                  ? `已加载 ${results.tracks.length}/${results.total}`
+                  : results.tracks.length})
+              </h2>
               <TrackList tracks={results.tracks} onPlay={handlePlayTrack} />
+              {hasMore && (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0' }}>
+                  <button className="btn btn-ghost btn-sm" onClick={loadMore} disabled={isLoadingMore}>
+                    {isLoadingMore ? '加载中...' : '加载更多'}
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="search-empty"><Search size={48} /><p>没有找到相关结果</p></div>

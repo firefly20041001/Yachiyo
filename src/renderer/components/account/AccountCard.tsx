@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
 import { LogIn, LogOut, User, RefreshCw, Loader2 } from 'lucide-react'
 import { AccountProvider, AccountInfo } from '@shared/types/accounts'
 import { GlassPanel } from '../common/GlassPanel'
+import { useAccountStore } from '../../stores/accountStore'
 
 interface AccountCardProps {
   provider: AccountProvider
@@ -12,6 +12,7 @@ interface AccountCardProps {
 
 export function AccountCard({ provider, account, onRefresh }: AccountCardProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const isRefreshing = useAccountStore((s) => s.isLoading)
 
   const providerNames: Record<AccountProvider, string> = {
     netease: '网易云音乐',
@@ -68,8 +69,13 @@ export function AccountCard({ provider, account, onRefresh }: AccountCardProps) 
             <div className="account-id">ID: {account.userId}</div>
           </div>
           <div className="account-actions">
-            <button className="btn btn-ghost" onClick={onRefresh}>
-              <RefreshCw size={16} />
+            <button
+              className="btn btn-ghost"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              title="刷新账号信息"
+            >
+              <RefreshCw size={16} className={isRefreshing ? 'spin' : ''} />
             </button>
             <button className="btn btn-danger" onClick={handleLogout}>
               <LogOut size={16} />

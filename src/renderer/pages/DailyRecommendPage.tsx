@@ -78,7 +78,7 @@ export function DailyRecommendPage({ source, onBack }: DailyRecommendPageProps) 
         setTracks([])
       } else {
         // Apply recommendation engine
-        const recommended = generateRecommendations(candidates, 30)
+        const recommended = await generateRecommendations(candidates, 30)
         console.log('[DailyRecommend] Generated', recommended.length, 'recommendations from', candidates.length, 'candidates')
         saveCachedTracks(source, recommended)
         setTracks(recommended)

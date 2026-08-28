@@ -8,24 +8,34 @@ import { ProgressBar } from './ProgressBar'
 import { VolumeControl } from './VolumeControl'
 import { usePlayback } from '../../hooks/usePlayback'
 import { FullScreenLyrics } from '../lyrics/FullScreenLyrics'
-import { Track } from '@shared/types/streaming'
+import { getCoverUrl } from '../../utils/cover'
+import { Track, QualityLevel } from '@shared/types/streaming'
 
 export function PlayerBar() {
   const currentTrack = usePlaybackStore((s) => s.currentTrack)
-  const currentTime = usePlaybackStore((s) => s.currentTime)
   const duration = usePlaybackStore((s) => s.duration)
   const volume = usePlaybackStore((s) => s.volume)
   const isMuted = usePlaybackStore((s) => s.isMuted)
   const playlist = usePlaybackStore((s) => s.playlist)
   const currentIndex = usePlaybackStore((s) => s.currentIndex)
   const playQueue = usePlaybackStore((s) => s.playQueue)
+  const quality = usePlaybackStore((s) => s.quality)
+  const setQuality = usePlaybackStore((s) => s.setQuality)
   const playlists = usePlaylistStore((s) => s.playlists)
   const { togglePlay, nextTrack, prevTrack, seek, setVolume, toggleMute, playTrack } = usePlayback()
   const [showLyrics, setShowLyrics] = useState(false)
   const [showQueue, setShowQueue] = useState(false)
+  const [showQualityMenu, setShowQualityMenu] = useState(false)
   const [menuTrack, setMenuTrack] = useState<Track | null>(null)
   const [addedId, setAddedId] = useState<string | null>(null)
   const queueListRef = useRef<HTMLDivElement>(null)
+
+  const qualityLabels: Record<QualityLevel, string> = {
+    standard: '标准',
+    high: '高品',
+    lossless: '无损',
+    hires: 'Hi-Res'
+  }
 
   // Combine playQueue + playlist for display
   const displayQueue = [...playQueue, ...playlist]
@@ -59,12 +69,12 @@ export function PlayerBar() {
     <>
       <div className="player-bar">
         <div className="player-bar-glass" />
-        <ProgressBar currentTime={currentTime} duration={duration} onSeek={seek} />
+        <ProgressBar duration={duration} onSeek={seek} />
         <div className="player-bar-content">
           <div className="player-track-info" onClick={() => setShowLyrics(true)} style={{ cursor: 'pointer' }}>
             <div className="player-track-cover">
               {currentTrack?.albumCoverUrl ? (
-                <img src={currentTrack.albumCoverUrl} alt="" />
+                <img src={getCoverUrl(currentTrack.albumCoverUrl, 100)} alt="" />
               ) : (
                 <div className="player-cover-placeholder"><Music size={20} /></div>
               )}
@@ -79,6 +89,19 @@ export function PlayerBar() {
 
           <div className="player-right">
             <VolumeControl volume={volume} isMuted={isMuted} onVolumeChange={setVolume} onToggleMute={toggleMute} />
+            <div style={{ position: 'relative' }}>
+              <button className="player-action-btn" onClick={() => setShowQualityMenu(!showQualityMenu)}>{qualityLabels[quality]}</button>
+              {showQualityMenu && (
+                <div className="quality-menu" onClick={(e) => e.stopPropagation()}>
+                 <div className="add-menu-title">音质</div>
+                  {(Object.entries(qualityLabels) as [QualityLevel, string][]).map(([key, label]) => (
+                    <button key={key} className={`add-menu-item ${quality === key ? 'active' : ''}`} onClick={() => { setQuality(key); setShowQualityMenu(false) }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button className="player-action-btn player-lyrics-btn" onClick={() => window.api.lyricsWindow.toggle()}>词</button>
             <button className="player-action-btn" onClick={() => setShowQueue(!showQueue)}><ListMusic size={18} /></button>
           </div>
