@@ -50,6 +50,16 @@
   justify-content: space-between;
   padding: 0 20px;
   z-index: 1;
+  /* The content row spans the full bar height and would block clicks on
+     the progress strip (z-index: 0) underneath; empty padding areas must
+     pass clicks through to it */
+  pointer-events: none;
+}
+
+.player-track-info,
+.player-controls,
+.player-right {
+  pointer-events: auto;
 }
 
 /* Progress Bar */
@@ -64,7 +74,9 @@
   padding: 0 20px;
   height: 16px;
   pointer-events: none;
-  z-index: 10;
+  /* Must stay below .player-bar-content (z-index: 1) so popups opening
+     upward from the content row (quality menu) are not covered */
+  z-index: 0;
 }
 
 .progress-time {
