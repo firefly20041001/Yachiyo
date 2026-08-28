@@ -5,33 +5,21 @@ import { usePlaybackStore } from '../../stores/playbackStore'
 import { useUIStore } from '../../stores/uiStore'
 
 export function LyricsPanel() {
-  const { lyrics, currentTrack, currentTime } = usePlaybackStore()
+  const lyrics = usePlaybackStore((s) => s.lyrics)
+  const currentTrack = usePlaybackStore((s) => s.currentTrack)
+  const currentLyricIndex = usePlaybackStore((s) => s.currentLyricIndex)
   const { showLyrics, toggleLyrics } = useUIStore()
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Find current lyric index based on time
-  useEffect(() => {
-    if (!lyrics?.lines.length) return
-
-    let index = -1
-    for (let i = 0; i < lyrics.lines.length; i++) {
-      if (lyrics.lines[i].time <= currentTime * 1000) {
-        index = i
-      }
-    }
-    usePlaybackStore.getState().setCurrentLyricIndex(index)
-  }, [currentTime, lyrics])
-
   // Auto-scroll to current lyric
   useEffect(() => {
-    const { currentLyricIndex } = usePlaybackStore.getState()
     if (!containerRef.current || currentLyricIndex < 0) return
 
     const lineEl = containerRef.current.children[currentLyricIndex] as HTMLElement
     if (lineEl) {
       lineEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
-  }, [usePlaybackStore((s) => s.currentLyricIndex)])
+  }, [currentLyricIndex])
 
   return (
     <AnimatePresence>
@@ -63,13 +51,11 @@ export function LyricsPanel() {
               lyrics.lines.map((line, index) => (
                 <motion.div
                   key={index}
-                  className={`lyrics-line ${
-                    index === usePlaybackStore.getState().currentLyricIndex ? 'lyrics-line-active' : ''
-                  }`}
+                  className={`lyrics-line ${index === currentLyricIndex ? 'lyrics-line-active' : ''}`}
                   initial={{ opacity: 0.4 }}
                   animate={{
-                    opacity: index === usePlaybackStore.getState().currentLyricIndex ? 1 : 0.4,
-                    scale: index === usePlaybackStore.getState().currentLyricIndex ? 1.05 : 1
+                    opacity: index === currentLyricIndex ? 1 : 0.4,
+                    scale: index === currentLyricIndex ? 1.05 : 1
                   }}
                 >
                   <div className="lyrics-text">{line.text}</div>

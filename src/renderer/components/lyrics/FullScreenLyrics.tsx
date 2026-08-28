@@ -14,7 +14,6 @@ interface FullScreenLyricsProps {
 export function FullScreenLyrics({ isOpen, onClose }: FullScreenLyricsProps) {
   const currentTrack = usePlaybackStore((s) => s.currentTrack)
   const isPlaying = usePlaybackStore((s) => s.isPlaying)
-  const currentTime = usePlaybackStore((s) => s.currentTime)
   const duration = usePlaybackStore((s) => s.duration)
   const lyrics = usePlaybackStore((s) => s.lyrics)
   const currentLyricIndex = usePlaybackStore((s) => s.currentLyricIndex)
@@ -115,7 +114,7 @@ export function FullScreenLyrics({ isOpen, onClose }: FullScreenLyricsProps) {
           </div>
 
           <div className="fullscreen-lyrics-bottom">
-            <ProgressBar currentTime={currentTime} duration={duration} onSeek={seek} />
+            <ProgressBar duration={duration} onSeek={seek} />
             <PlayerControls onTogglePlay={togglePlay} onNext={nextTrack} onPrev={prevTrack} variant="light" />
           </div>
         </motion.div>

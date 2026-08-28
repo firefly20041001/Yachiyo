@@ -25,6 +25,8 @@ function applyAudioDevice() {
 
 let initialized = false
 let lastLyricIndex = -1
+let lastTimeUpdateAt = 0
+let restoreStarted = false
 
 // ---- Media Session ----
 
@@ -154,26 +156,33 @@ export function initAudio() {
   setupMediaSessionHandlers()
 
   audio.addEventListener('timeupdate', () => {
+    const now = performance.now()
+    if (now - lastTimeUpdateAt < 500) return
+    lastTimeUpdateAt = now
+
     const state = usePlaybackStore.getState()
     state.setCurrentTime(audio.currentTime)
 
-    const { lyrics, currentLyricIndex } = state
+    const { lyrics } = state
     if (lyrics?.lines.length) {
       const timeMs = audio.currentTime * 1000
-      let index = -1
-      for (let i = 0; i < lyrics.lines.length; i++) {
-        if (lyrics.lines[i].time <= timeMs) index = i
+      // Binary search: find last line with time <= timeMs
+      let lo = 0, hi = lyrics.lines.length - 1, index = -1
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1
+        if (lyrics.lines[mid].time <= timeMs) { index = mid; lo = mid + 1 }
+        else hi = mid - 1
       }
-      if (index !== currentLyricIndex) {
+      if (index !== state.currentLyricIndex) {
         state.setCurrentLyricIndex(index)
       }
-    }
 
-    if (lyrics && currentLyricIndex >= 0 && currentLyricIndex !== lastLyricIndex) {
-      lastLyricIndex = currentLyricIndex
-      const line = lyrics.lines[currentLyricIndex]
-      if (line) {
-        try { window.api.lyricsWindow.updateLine(line.text, line.translation) } catch {}
+      if (index >= 0 && index !== lastLyricIndex) {
+        lastLyricIndex = index
+        const line = lyrics.lines[index]
+        if (line) {
+          try { window.api.lyricsWindow.updateLine(line.text, line.translation) } catch {}
+        }
       }
     }
   })
@@ -284,6 +293,9 @@ export function stopAndClear() {
 }
 
 export function restoreLastTrack() {
+  if (restoreStarted) return
+  restoreStarted = true
+
   const state = usePlaybackStore.getState()
   if (!state.currentTrack) return
 

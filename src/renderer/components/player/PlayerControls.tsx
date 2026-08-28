@@ -10,7 +10,9 @@ interface PlayerControlsProps {
 }
 
 export function PlayerControls({ onTogglePlay, onNext, onPrev, variant = 'default' }: PlayerControlsProps) {
-  const { isPlaying, playMode, cyclePlayMode } = usePlaybackStore()
+  const isPlaying = usePlaybackStore((s) => s.isPlaying)
+  const playMode = usePlaybackStore((s) => s.playMode)
+  const cyclePlayMode = usePlaybackStore((s) => s.cyclePlayMode)
 
   const playModeIcons: Record<PlayMode, typeof Repeat> = {
     sequence: Repeat,

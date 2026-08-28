@@ -184,7 +184,6 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   },
   setCurrentTime: (time) => {
     set({ currentTime: time })
-    markDirty()
   },
   setDuration: (duration) => set({ duration }),
   setVolume: (volume) => {
@@ -192,7 +191,6 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     audio.volume = volume
     set({ volume, isMuted: volume === 0 })
     markDirty()
-    saveCurrentSession(get)
   },
   toggleMute: () => {
     const { isMuted, volume } = get()
@@ -322,6 +320,6 @@ function getAudio() {
 // Save on app exit
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', () => {
-    if (sessionDirty) saveCurrentSession(usePlaybackStore.getState)
+    saveCurrentSession(usePlaybackStore.getState)
   })
 }

@@ -1,11 +1,8 @@
 import { useCallback } from 'react'
-import { usePlaybackStore } from '../stores/playbackStore'
 import { Track } from '@shared/types/streaming'
 import { playSingleTrack, playFromList, playQueue, togglePlay, pause, seek, setVolume, nextTrack, prevTrack, addToPlayQueue, stopAndClear } from '../utils/audio'
 
 export function usePlayback() {
-  const store = usePlaybackStore()
-
   const playTrackFn = useCallback(async (track: Track, source?: { page: string; id?: string }) => {
     playSingleTrack(track, source)
   }, [])
@@ -28,7 +25,6 @@ export function usePlayback() {
   const stopAndClearFn = useCallback(() => stopAndClear(), [])
 
   return {
-    ...store,
     playTrack: playTrackFn,
     playQueue: playFromListFn,
     playAll: playQueueFn,
