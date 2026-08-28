@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build output (electron-vite / electron-builder)
+dist/
+out/
+release/
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Cache
+.cache/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local Claude settings (shared settings.json stays tracked)
+.claude/settings.local.json
+
+# Duplicate source tree (canonical source lives in ./src)
+Code/

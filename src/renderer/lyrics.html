@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yachiyo Lyrics</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background: transparent;
+      user-select: none;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+    .lyrics-container {
+      text-align: center;
+      padding: 16px 32px;
+      border-radius: 16px;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      max-width: 90%;
+      -webkit-app-region: drag;
+    }
+    .lyrics-container.locked {
+      -webkit-app-region: no-drag;
+    }
+    .lyrics-line {
+      font-size: 28px;
+      font-weight: 600;
+      color: #ffffff;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1.4;
+      transition: all 0.3s ease;
+    }
+    .lyrics-translation {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 4px;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+    .lyrics-empty {
+      font-size: 20px;
+      color: rgba(255, 255, 255, 0.4);
+      font-weight: 400;
+    }
+    .controls {
+      position: absolute;
+      top: 4px;
+      right: 8px;
+      display: flex;
+      gap: 4px;
+      -webkit-app-region: no-drag;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .lyrics-container:hover .controls {
+      opacity: 1;
+    }
+    .control-btn {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .control-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="lyrics-container" id="lyrics-container">
+    <div class="controls">
+      <button class="control-btn" id="lock-btn" title="锁定/解锁">🔓</button>
+      <button class="control-btn" id="close-btn" title="关闭">✕</button>
+    </div>
+    <div class="lyrics-line" id="lyrics-line">等待播放...</div>
+    <div class="lyrics-translation" id="lyrics-translation"></div>
+  </div>
+
+  <script>
+    const lineEl = document.getElementById('lyrics-line');
+    const transEl = document.getElementById('lyrics-translation');
+    const container = document.getElementById('lyrics-container');
+    const lockBtn = document.getElementById('lock-btn');
+    const closeBtn = document.getElementById('close-btn');
+
+    let isLocked = false;
+
+    window.api.lyricsWindow.onUpdate((data) => {
+      if (data.line) {
+        lineEl.textContent = data.line;
+        lineEl.classList.remove('lyrics-empty');
+      } else {
+        lineEl.textContent = '暂无歌词';
+        lineEl.classList.add('lyrics-empty');
+      }
+      transEl.textContent = data.translation || '';
+    });
+
+    window.api.lyricsWindow.onSettings((settings) => {
+      applySettings(settings);
+    });
+
+    function applySettings(settings) {
+      if (settings.fontSize) lineEl.style.fontSize = settings.fontSize + 'px';
+      if (settings.fontFamily) lineEl.style.fontFamily = settings.fontFamily;
+      if (settings.color) lineEl.style.color = settings.color;
+      if (settings.opacity) container.style.opacity = settings.opacity;
+      if (settings.bgColor) container.style.background = settings.bgColor;
+      if (settings.borderRadius) container.style.borderRadius = settings.borderRadius + 'px';
+      if (settings.bold) lineEl.style.fontWeight = settings.bold ? '600' : '400';
+      if (settings.textShadow) {
+        lineEl.style.textShadow = '0 2px 8px rgba(0,0,0,0.5)';
+      } else {
+        lineEl.style.textShadow = 'none';
+      }
+      isLocked = settings.locked || false;
+      lockBtn.textContent = isLocked ? '🔒' : '🔓';
+      container.classList.toggle('locked', isLocked);
+    }
+
+    lockBtn.addEventListener('click', () => {
+      isLocked = !isLocked;
+      window.api.lyricsWindow.setSetting('locked', isLocked);
+      lockBtn.textContent = isLocked ? '🔒' : '🔓';
+      container.classList.toggle('locked', isLocked);
+    });
+
+    closeBtn.addEventListener('click', () => {
+      window.api.lyricsWindow.setSetting('enabled', false);
+      window.api.lyricsWindow.hide();
+    });
+
+    // Load initial settings
+    window.api.lyricsWindow.getSettings().then(applySettings);
+  </script>
+</body>
+</html>
