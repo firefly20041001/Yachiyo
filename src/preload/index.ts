@@ -94,6 +94,14 @@ const api: ElectronAPI = {
     addTrack: (playlistId, track) => ipcRenderer.invoke('playlist:addTrack', playlistId, track),
     removeTrack: (playlistId, trackId) =>
       ipcRenderer.invoke('playlist:removeTrack', playlistId, trackId)
+  },
+
+  listening: {
+    addEvent: (event) => ipcRenderer.invoke('listening:addEvent', event),
+    getEvents: () => ipcRenderer.invoke('listening:getEvents'),
+    getProfile: () => ipcRenderer.invoke('listening:getProfile'),
+    setProfile: (profile) => ipcRenderer.invoke('listening:setProfile', profile),
+    clear: () => ipcRenderer.invoke('listening:clear')
   }
 }
 

@@ -195,13 +195,13 @@ export function initAudio() {
 
   audio.addEventListener('ended', () => {
     const track = usePlaybackStore.getState().currentTrack
-    if (track) saveListeningEvent(createListeningEvent(track, true, false, track.duration))
+    if (track) saveListeningEvent(createListeningEvent(track, true, false, track.duration)).catch(() => {})
     skipToNextSilent()
   })
 
   audio.addEventListener('error', () => {
     const track = usePlaybackStore.getState().currentTrack
-    if (track) saveListeningEvent(createListeningEvent(track, false, true, audio.currentTime * 1000))
+    if (track) saveListeningEvent(createListeningEvent(track, false, true, audio.currentTime * 1000)).catch(() => {})
     skipToNextSilent()
   })
 
@@ -255,7 +255,7 @@ export function setVolume(volume: number) { usePlaybackStore.getState().setVolum
 
 export function nextTrack() {
   const current = usePlaybackStore.getState().currentTrack
-  if (current) saveListeningEvent(createListeningEvent(current, false, true, audio.currentTime * 1000))
+  if (current) saveListeningEvent(createListeningEvent(current, false, true, audio.currentTime * 1000)).catch(() => {})
   const store = usePlaybackStore.getState()
   const next = store.advanceToNext()
   if (next) playTrackDirect(next).catch(() => skipToNextSilent())

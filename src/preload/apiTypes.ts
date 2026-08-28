@@ -1,3 +1,4 @@
+import { ListeningEvent, UserProfile } from '../shared/types/listening'
 import { AccountProvider, AccountInfo } from '../shared/types/accounts'
 import {
   MusicSource,
@@ -102,5 +103,13 @@ export interface ElectronAPI {
     refresh: (id: string) => Promise<{ added: number; removed: number; kept: number; total: number }>
     addTrack: (playlistId: string, track: Track) => Promise<void>
     removeTrack: (playlistId: string, trackId: string) => Promise<void>
+  },
+
+  listening: {
+    addEvent: (event: ListeningEvent) => Promise<void>
+    getEvents: () => Promise<ListeningEvent[]>
+    getProfile: () => Promise<UserProfile | null>
+    setProfile: (profile: UserProfile) => Promise<void>
+    clear: () => Promise<void>
   }
 }

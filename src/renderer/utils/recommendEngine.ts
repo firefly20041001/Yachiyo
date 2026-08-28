@@ -1,7 +1,8 @@
 // Recommendation engine based on user listening behavior
 
 import { Track } from '@shared/types/streaming'
-import { UserProfile, loadProfile, loadEvents } from './listeningBehavior'
+import { UserProfile } from '@shared/types/listening'
+import { loadProfile, loadEvents } from './listeningBehavior'
 
 interface ScoredTrack {
   track: Track
@@ -16,7 +17,7 @@ function scoreTrack(track: Track, profile: UserProfile): number {
   for (const artist of track.artists) {
     const weight = profile.artistWeights[artist] || 0
     if (weight > 0) {
-      score += weight * 2 // Positive weight = liked artist
+      score += weight * 2
     }
   }
 
@@ -27,8 +28,8 @@ function scoreTrack(track: Track, profile: UserProfile): number {
 }
 
 // Filter out recently played tracks (avoid repetition)
-function filterRecentTracks(tracks: Track[], count: number): Track[] {
-  const events = loadEvents()
+async function filterRecentTracks(tracks: Track[], count: number): Promise<Track[]> {
+  const events = await loadEvents()
   const recentIds = new Set(
     events
       .slice(-100) // Last 100 plays
@@ -49,11 +50,11 @@ function filterRecentTracks(tracks: Track[], count: number): Track[] {
 }
 
 // Main recommendation function
-export function generateRecommendations(
+export async function generateRecommendations(
   candidateTracks: Track[],
   limit: number = 30
-): Track[] {
-  const profile = loadProfile()
+): Promise<Track[]> {
+  const profile = await loadProfile()
 
   if (candidateTracks.length === 0) return []
 
@@ -64,7 +65,7 @@ export function generateRecommendations(
   }
 
   // Filter out recently played
-  const filtered = filterRecentTracks(candidateTracks, limit * 2)
+  const filtered = await filterRecentTracks(candidateTracks, limit * 2)
 
   // Score each track
   const scored: ScoredTrack[] = filtered.map(track => ({
