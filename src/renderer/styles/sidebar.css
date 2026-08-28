@@ -224,4 +224,10 @@
 
 .sidebar-collapsed .sidebar-collapse-btn {
   margin-left: 0;
+  /* Match the theme button: clean 36px icon button once the label has
+     collapsed away (box shrinks smoothly with the max-width animation) */
+  padding: 0;
+  gap: 0;
+  min-width: 36px;
+  justify-content: center;
 }
