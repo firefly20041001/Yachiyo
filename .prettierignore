@@ -1,0 +1,9 @@
+node_modules
+dist
+out
+release
+build
+coverage
+package-lock.json
+pnpm-lock.yaml
+*.md
