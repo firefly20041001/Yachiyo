@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // This file patches the module resolution to make require('electron')
 // return the built-in Electron API instead of the npm package.
 

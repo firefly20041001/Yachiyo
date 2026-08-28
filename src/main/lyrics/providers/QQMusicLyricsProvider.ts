@@ -14,7 +14,7 @@ const qqHeaders = (cookie?: string): Record<string, string> => ({
 const maybeDecodeBase64 = (str: string): string => {
   if (!str) return ''
   // Check if it looks like base64 (no CJK, no brackets, length divisible by 4)
-  if (/[一-鿿　-〿]/.test(str)) return str
+  if (/[\\u4E00-\\u9FFF\\u3000-\\u303F]/.test(str)) return str
   if (str.includes('[') && str.includes(':')) return str
   if (str.length % 4 !== 0) return str
   try {
