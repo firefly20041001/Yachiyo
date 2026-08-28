@@ -92,7 +92,7 @@ async function playTrackDirect(track: Track) {
 
     usePlaybackStore.getState().setCurrentTrack(track)
 
-    const info = await window.api.streaming.resolvePlayback(track.source, track.id, 'standard')
+    const info = await window.api.streaming.resolvePlayback(track.source, track.id, usePlaybackStore.getState().quality || 'standard')
     console.log('[Playback] URL:', info.url.substring(0, 100))
     usePlaybackStore.getState().setPlaybackInfo(info)
 
@@ -294,7 +294,7 @@ export function restoreLastTrack() {
 
   // Restore the track (without auto-playing)
   // Set the audio source so the track is ready to play
-  window.api.streaming.resolvePlayback(state.currentTrack.source, state.currentTrack.id, 'standard')
+  window.api.streaming.resolvePlayback(state.currentTrack.source, state.currentTrack.id, usePlaybackStore.getState().quality || 'standard')
     .then((info) => {
       audio.src = info.url
       audio.volume = state.isMuted ? 0 : state.volume

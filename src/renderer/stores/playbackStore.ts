@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Track, PlaybackInfo } from '@shared/types/streaming'
+import { Track, PlaybackInfo, QualityLevel } from '@shared/types/streaming'
 import { Lyrics } from '@shared/types/lyrics'
 
 export type PlayMode = 'sequence' | 'loop' | 'shuffle' | 'single'
@@ -13,6 +13,7 @@ export interface SessionData {
   volume: number
   playMode: PlayMode
   outputDevice: string
+  quality: QualityLevel
   timestamp: number
 }
 
@@ -31,6 +32,7 @@ interface PlaybackState {
   playSource: { page: string; id?: string } | null
   lyrics: Lyrics | null
   currentLyricIndex: number
+  quality: QualityLevel
 
   setCurrentTrack: (track: Track | null) => void
   setPlaySource: (source: { page: string; id?: string } | null) => void
@@ -52,6 +54,7 @@ interface PlaybackState {
   advanceToPrev: () => Track | null
   setLyrics: (lyrics: Lyrics | null) => void
   setCurrentLyricIndex: (index: number) => void
+  setQuality: (quality: QualityLevel) => void
   stopAndClear: () => void
   saveSession: () => void
 }
@@ -87,6 +90,7 @@ function saveSessionData(data: Partial<SessionData>) {
       volume: data.volume !== undefined ? data.volume : (existing.volume ?? 0.7),
       playMode: data.playMode !== undefined ? data.playMode : (existing.playMode || 'sequence'),
       outputDevice: data.outputDevice !== undefined ? data.outputDevice : (existing.outputDevice || 'default'),
+      quality: data.quality !== undefined ? data.quality : (existing.quality || 'standard'),
       timestamp: Date.now()
     }
     localStorage.setItem(SESSION_KEY, JSON.stringify(merged))
@@ -103,7 +107,8 @@ function saveCurrentSession(get: () => PlaybackState) {
     playQueue: s.playQueue,
     currentTime: s.currentTime,
     volume: s.volume,
-    playMode: s.playMode
+    playMode: s.playMode,
+    quality: s.quality
   })
 }
 
@@ -159,6 +164,7 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   playSource: null,
   lyrics: null,
   currentLyricIndex: -1,
+  quality: saved?.quality || 'standard',
 
   setCurrentTrack: (track) => {
     set({ currentTrack: track, currentTime: 0, duration: track ? track.duration / 1000 : 0 })
@@ -284,6 +290,11 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     markDirty()
     saveCurrentSession(get)
     return prevTrack
+  },
+  setQuality: (quality) => {
+    set({ quality })
+    markDirty()
+    saveCurrentSession(get)
   },
   setLyrics: (lyrics) => set({ lyrics, currentLyricIndex: -1 }),
   setCurrentLyricIndex: (index) => set({ currentLyricIndex: index }),
