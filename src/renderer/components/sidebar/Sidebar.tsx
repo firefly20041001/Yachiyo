@@ -31,7 +31,7 @@ export function Sidebar({ onNavigate, activePage }: SidebarProps) {
     >
       <div className="sidebar-logo">
         <img src="./icon.png" alt="Yachiyo" className="logo-icon-img" style={{ width: 32, height: 32, borderRadius: 8 }} />
-        {!sidebarCollapsed && <span className="logo-text">Yachiyo</span>}
+        <span className="logo-text">Yachiyo</span>
       </div>
 
       <nav className="sidebar-nav">
@@ -44,23 +44,21 @@ export function Sidebar({ onNavigate, activePage }: SidebarProps) {
             whileTap={{ scale: 0.98 }}
           >
             <item.icon size={20} />
-            {!sidebarCollapsed && <span className="nav-label">{item.label}</span>}
+            <span className="nav-label">{item.label}</span>
           </motion.button>
         ))}
       </nav>
 
-      {!sidebarCollapsed && (
-        <div className="sidebar-accounts">
-          <div className="account-status">
-            <div className={`account-dot ${accounts.netease ? 'account-dot-active netease' : ''}`} />
-            <span>网易云</span>
-          </div>
-          <div className="account-status">
-            <div className={`account-dot ${accounts.qqmusic ? 'account-dot-active qqmusic' : ''}`} />
-            <span>QQ音乐</span>
-          </div>
+      <div className="sidebar-accounts">
+        <div className="account-status">
+          <div className={`account-dot ${accounts.netease ? 'account-dot-active netease' : ''}`} />
+          <span>网易云</span>
         </div>
-      )}
+        <div className="account-status">
+          <div className={`account-dot ${accounts.qqmusic ? 'account-dot-active qqmusic' : ''}`} />
+          <span>QQ音乐</span>
+        </div>
+      </div>
 
       <div className="sidebar-bottom">
         <button
@@ -76,7 +74,7 @@ export function Sidebar({ onNavigate, activePage }: SidebarProps) {
           title={sidebarCollapsed ? '展开侧栏' : '折叠侧栏'}
         >
           {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-          {!sidebarCollapsed && <span className="sidebar-btn-label">折叠侧栏</span>}
+          <span className="sidebar-btn-label">折叠侧栏</span>
         </button>
       </div>
     </motion.aside>
