@@ -7,6 +7,9 @@ out/
 release/
 coverage/
 
+# npm lockfile (project uses pnpm)
+package-lock.json
+
 # Logs
 *.log
 npm-debug.log*
