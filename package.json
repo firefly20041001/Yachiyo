@@ -18,7 +18,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:cover": "node scripts/test-cover-url.mjs"
   },
   "dependencies": {
     "@neteasecloudmusicapienhanced/api": "^4.35.1",
