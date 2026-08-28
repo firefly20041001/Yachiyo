@@ -26,7 +26,7 @@ export function Sidebar({ onNavigate, activePage }: SidebarProps) {
   return (
     <motion.aside
       className={`sidebar ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}
-      animate={{ width: sidebarCollapsed ? 72 : 240 }}
+      animate={{ width: sidebarCollapsed ? 88 : 240 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
     >
       <div className="sidebar-logo">

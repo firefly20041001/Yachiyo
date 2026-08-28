@@ -23,10 +23,11 @@
   z-index: 20;
 }
 
-/* Collapsed state keeps items left-aligned so nothing jumps when the
-   class flips at animation start; only the labels hide */
+/* Collapsed rail: 88px wide, icons centered. Centering is done with
+   animated padding (not align/justify flips) so nothing jumps when the
+   class flips at animation start */
 .sidebar-collapsed .sidebar-logo {
-  padding: 8px 8px;
+  padding: 8px 16px;
 }
 
 /* Logo */
@@ -36,6 +37,7 @@
   gap: 12px;
   padding: 8px 12px;
   margin-bottom: 24px;
+  transition: padding 0.3s ease;
 }
 
 .logo-icon {
@@ -126,6 +128,11 @@
 .sidebar-collapsed .nav-label {
   max-width: 0;
   opacity: 0;
+}
+
+.sidebar-collapsed .nav-item {
+  /* (64 inner - 20 icon) / 2 = 22px left padding centers the icon */
+  padding: 10px 22px 10px 22px;
 }
 
 /* Account Status */
@@ -220,6 +227,7 @@
 
 .sidebar-collapsed .sidebar-bottom {
   flex-direction: column;
+  align-items: center;
 }
 
 .sidebar-collapsed .sidebar-collapse-btn {
