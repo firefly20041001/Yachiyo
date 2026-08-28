@@ -12,7 +12,6 @@ import { Track } from '@shared/types/streaming'
 
 export function PlayerBar() {
   const currentTrack = usePlaybackStore((s) => s.currentTrack)
-  const currentTime = usePlaybackStore((s) => s.currentTime)
   const duration = usePlaybackStore((s) => s.duration)
   const volume = usePlaybackStore((s) => s.volume)
   const isMuted = usePlaybackStore((s) => s.isMuted)
@@ -59,7 +58,7 @@ export function PlayerBar() {
     <>
       <div className="player-bar">
         <div className="player-bar-glass" />
-        <ProgressBar currentTime={currentTime} duration={duration} onSeek={seek} />
+        <ProgressBar duration={duration} onSeek={seek} />
         <div className="player-bar-content">
           <div className="player-track-info" onClick={() => setShowLyrics(true)} style={{ cursor: 'pointer' }}>
             <div className="player-track-cover">

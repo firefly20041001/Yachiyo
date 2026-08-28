@@ -59,13 +59,14 @@ interface PlaybackState {
 // ---- Session Persistence ----
 
 const SESSION_KEY = 'yachiyo_session'
+const HISTORY_KEY = 'playHistory'
+let sessionDirty = false
 
 function loadSession(): SessionData | null {
   try {
     const raw = localStorage.getItem(SESSION_KEY)
     if (!raw) return null
     const data = JSON.parse(raw) as SessionData
-    // Validate: must have a track and not be too old (7 days)
     if (!data.currentTrack) return null
     if (Date.now() - (data.timestamp || 0) > 7 * 24 * 60 * 60 * 1000) return null
     return data
@@ -74,7 +75,7 @@ function loadSession(): SessionData | null {
   }
 }
 
-function saveSession(data: Partial<SessionData>) {
+function saveSessionData(data: Partial<SessionData>) {
   try {
     const existing = loadSession() || {} as SessionData
     const merged: SessionData = {
@@ -89,89 +90,47 @@ function saveSession(data: Partial<SessionData>) {
       timestamp: Date.now()
     }
     localStorage.setItem(SESSION_KEY, JSON.stringify(merged))
+    sessionDirty = false
   } catch {}
 }
 
-// ---- Legacy persistence (kept for compatibility) ----
-
-function loadSaved() {
-  try {
-    const s = localStorage.getItem('playbackState')
-    if (s) return JSON.parse(s)
-  } catch {}
-  return null
+function saveCurrentSession(get: () => PlaybackState) {
+  const s = get()
+  saveSessionData({
+    currentTrack: s.currentTrack,
+    playlist: s.playlist,
+    currentIndex: s.currentIndex,
+    playQueue: s.playQueue,
+    currentTime: s.currentTime,
+    volume: s.volume,
+    playMode: s.playMode
+  })
 }
 
-function saveState(data: Record<string, any>) {
-  try {
-    localStorage.setItem('playbackState', JSON.stringify(data))
-  } catch {}
-}
-
-function loadPlayMode(): PlayMode {
-  try {
-    return (localStorage.getItem('playMode') as PlayMode) || 'sequence'
-  } catch {
-    return 'sequence'
-  }
-}
-
-function savePlayMode(mode: PlayMode) {
-  try {
-    localStorage.setItem('playMode', mode)
-  } catch {}
+function markDirty() {
+  sessionDirty = true
 }
 
 function addToHistory(track: Track) {
   try {
-    const history = JSON.parse(localStorage.getItem('playHistory') || '[]') as Array<{ track: Track; playedAt: number }>
+    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]') as Array<{ track: Track; playedAt: number }>
     const filtered = history.filter(h => !(h.track.id === track.id && h.track.source === track.source))
     filtered.unshift({ track, playedAt: Date.now() })
     if (filtered.length > 100) filtered.length = 100
-    localStorage.setItem('playHistory', JSON.stringify(filtered))
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(filtered))
   } catch {}
 }
 
-function persist(state: Partial<PlaybackState>) {
-  const current = loadSaved() || {}
-  saveState({
-    ...current,
-    ...(state.playlist !== undefined && { playlist: state.playlist }),
-    ...(state.currentIndex !== undefined && { currentIndex: state.currentIndex }),
-    ...(state.playQueue !== undefined && { playQueue: state.playQueue }),
-    ...(state.volume !== undefined && { volume: state.volume }),
-    ...(state.currentTrack !== undefined && { currentTrack: state.currentTrack })
-  })
+// ---- Auto-save (only when dirty) ----
 
-  // Also save to session
-  saveSession({
-    currentTrack: state.currentTrack,
-    playlist: state.playlist,
-    currentIndex: state.currentIndex,
-    playQueue: state.playQueue,
-    volume: state.volume
-  })
-}
-
-// ---- Auto-save timer ----
 let autoSaveTimer: ReturnType<typeof setInterval> | null = null
 
 function startAutoSave() {
   if (autoSaveTimer) return
   autoSaveTimer = setInterval(() => {
-    const state = usePlaybackStore.getState()
-    if (state.currentTrack) {
-      saveSession({
-        currentTrack: state.currentTrack,
-        playlist: state.playlist,
-        currentIndex: state.currentIndex,
-        playQueue: state.playQueue,
-        currentTime: state.currentTime,
-        volume: state.volume,
-        playMode: state.playMode
-      })
-    }
-  }, 10000) // Save every 10 seconds
+    if (!sessionDirty) return
+    saveCurrentSession(usePlaybackStore.getState)
+  }, 10000)
 }
 
 function stopAutoSave() {
@@ -183,7 +142,7 @@ function stopAutoSave() {
 
 // ---- Store ----
 
-const saved = loadSession() || loadSaved()
+const saved = loadSession()
 
 export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   currentTrack: saved?.currentTrack || null,
@@ -193,7 +152,7 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   duration: saved?.currentTrack ? saved.currentTrack.duration / 1000 : 0,
   volume: saved?.volume ?? 0.7,
   isMuted: false,
-  playMode: (saved?.playMode as PlayMode) || loadPlayMode(),
+  playMode: saved?.playMode || 'sequence',
   playlist: saved?.playlist || [],
   currentIndex: saved?.currentIndex ?? -1,
   playQueue: saved?.playQueue || [],
@@ -204,44 +163,30 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   setCurrentTrack: (track) => {
     set({ currentTrack: track, currentTime: 0, duration: track ? track.duration / 1000 : 0 })
     if (track) addToHistory(track)
-    persist({ currentTrack: track })
-    // Save session immediately on track change
-    saveSession({
-      currentTrack: track,
-      playlist: get().playlist,
-      currentIndex: get().currentIndex,
-      playQueue: get().playQueue,
-      currentTime: 0,
-      volume: get().volume,
-      playMode: get().playMode
-    })
+    markDirty()
+    saveCurrentSession(get)
   },
 
   setPlaySource: (source) => set({ playSource: source }),
   setPlaybackInfo: (info) => set({ playbackInfo: info }),
   setIsPlaying: (playing) => {
     set({ isPlaying: playing })
-    // Save on pause
     if (!playing) {
-      const state = get()
-      saveSession({
-        currentTrack: state.currentTrack,
-        playlist: state.playlist,
-        currentIndex: state.currentIndex,
-        playQueue: state.playQueue,
-        currentTime: state.currentTime,
-        volume: state.volume,
-        playMode: state.playMode
-      })
+      markDirty()
+      saveCurrentSession(get)
     }
   },
-  setCurrentTime: (time) => set({ currentTime: time }),
+  setCurrentTime: (time) => {
+    set({ currentTime: time })
+    markDirty()
+  },
   setDuration: (duration) => set({ duration }),
   setVolume: (volume) => {
     const audio = getAudio()
     audio.volume = volume
     set({ volume, isMuted: volume === 0 })
-    persist({ volume })
+    markDirty()
+    saveCurrentSession(get)
   },
   toggleMute: () => {
     const { isMuted, volume } = get()
@@ -251,37 +196,41 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
   },
   setPlayMode: (mode) => {
     set({ playMode: mode })
-    savePlayMode(mode)
-    saveSession({ playMode: mode })
+    markDirty()
+    saveCurrentSession(get)
   },
   cyclePlayMode: () => {
     const modes: PlayMode[] = ['sequence', 'loop', 'single', 'shuffle']
     const { playMode } = get()
     const newMode = modes[(modes.indexOf(playMode) + 1) % modes.length]
     set({ playMode: newMode })
-    savePlayMode(newMode)
-    saveSession({ playMode: newMode })
+    markDirty()
+    saveCurrentSession(get)
   },
   setPlaylist: (tracks, startIndex = 0) => {
     set({ playlist: tracks, currentIndex: startIndex, playQueue: [] })
-    persist({ playlist: tracks, currentIndex: startIndex, playQueue: [] })
+    markDirty()
+    saveCurrentSession(get)
   },
   addToPlayQueue: (track: Track) => {
     const { playQueue } = get()
     const filtered = playQueue.filter(t => !(t.id === track.id && t.source === track.source))
     filtered.unshift(track)
     set({ playQueue: filtered })
-    persist({ playQueue: filtered })
+    markDirty()
+    saveCurrentSession(get)
   },
   clearPlayQueue: () => {
     set({ playQueue: [] })
-    persist({ playQueue: [] })
+    markDirty()
+    saveCurrentSession(get)
   },
   removeFromPlayQueue: (index: number) => {
     const { playQueue } = get()
     const newQueue = playQueue.filter((_, i) => i !== index)
     set({ playQueue: newQueue })
-    persist({ playQueue: newQueue })
+    markDirty()
+    saveCurrentSession(get)
   },
   getNextTrack: () => {
     const { playQueue, playlist, currentIndex, playMode } = get()
@@ -306,7 +255,8 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
       const remaining = playQueue.slice(1)
       set({ playQueue: remaining, currentTrack: nextTrack, currentTime: 0, duration: nextTrack.duration / 1000 })
       addToHistory(nextTrack)
-      persist({ playQueue: remaining })
+      markDirty()
+      saveCurrentSession(get)
       return nextTrack
     }
     if (playlist.length === 0) return null
@@ -317,7 +267,8 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     const nextTrack = playlist[nextIndex]
     set({ currentIndex: nextIndex, currentTrack: nextTrack, currentTime: 0, duration: nextTrack.duration / 1000 })
     addToHistory(nextTrack)
-    persist({ currentIndex: nextIndex })
+    markDirty()
+    saveCurrentSession(get)
     return nextTrack
   },
   advanceToPrev: () => {
@@ -330,7 +281,8 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     const prevTrack = playlist[prevIndex]
     set({ currentIndex: prevIndex, currentTrack: prevTrack, currentTime: 0, duration: prevTrack.duration / 1000 })
     addToHistory(prevTrack)
-    persist({ currentIndex: prevIndex })
+    markDirty()
+    saveCurrentSession(get)
     return prevTrack
   },
   setLyrics: (lyrics) => set({ lyrics, currentLyricIndex: -1 }),
@@ -342,21 +294,10 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
       currentTime: 0, duration: 0, playlist: [], currentIndex: -1,
       playQueue: [], lyrics: null, currentLyricIndex: 0
     })
-    localStorage.removeItem('playbackState')
     localStorage.removeItem(SESSION_KEY)
+    sessionDirty = false
   },
-  saveSession: () => {
-    const state = get()
-    saveSession({
-      currentTrack: state.currentTrack,
-      playlist: state.playlist,
-      currentIndex: state.currentIndex,
-      playQueue: state.playQueue,
-      currentTime: state.currentTime,
-      volume: state.volume,
-      playMode: state.playMode
-    })
-  }
+  saveSession: () => saveCurrentSession(get)
 }))
 
 // Start auto-save when store is created
@@ -370,17 +311,6 @@ function getAudio() {
 // Save on app exit
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', () => {
-    const state = usePlaybackStore.getState()
-    if (state.currentTrack) {
-      saveSession({
-        currentTrack: state.currentTrack,
-        playlist: state.playlist,
-        currentIndex: state.currentIndex,
-        playQueue: state.playQueue,
-        currentTime: state.currentTime,
-        volume: state.volume,
-        playMode: state.playMode
-      })
-    }
+    if (sessionDirty) saveCurrentSession(usePlaybackStore.getState)
   })
 }

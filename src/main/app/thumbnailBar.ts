@@ -6,7 +6,12 @@ let mainWindowRef: BrowserWindow | null = null
 let isPlaying = false
 let currentCoverUrl = ''
 
+// Cache icons after first load to avoid disk reads on every play/pause toggle
+const iconCache: Record<string, NativeImage> = {}
+
 function loadIcon(name: string): NativeImage {
+  if (iconCache[name] && !iconCache[name].isEmpty()) return iconCache[name]
+
   const paths = [
     join(__dirname, '../../resources/icons/' + name),
     join(__dirname, '../../../resources/icons/' + name),
@@ -16,14 +21,18 @@ function loadIcon(name: string): NativeImage {
   for (const p of paths) {
     if (existsSync(p)) {
       const img = nativeImage.createFromPath(p)
-      console.log('[ThumbnailBar]', name, '->', p, 'empty:', img.isEmpty(), 'size:', img.getSize())
+      iconCache[name] = img
       return img
     }
   }
 
-  console.log('[ThumbnailBar]', name, '-> NOT FOUND')
-  return nativeImage.createEmpty()
+  iconCache[name] = nativeImage.createEmpty()
+  return iconCache[name]
 }
+
+// Cache cover image to avoid re-fetching on every state change
+let cachedCoverUrl = ''
+let cachedCoverIcon: NativeImage | null = null
 
 function setButtons(win: BrowserWindow) {
   if (process.platform !== 'win32' || !win || win.isDestroyed()) return
@@ -35,20 +44,24 @@ function setButtons(win: BrowserWindow) {
       { tooltip: '下一首', icon: loadIcon('next.png'), click: () => mainWindowRef?.webContents.send('tray:next') }
     ])
 
-    // Overlay icon
+    // Overlay icon (cached)
     if (isPlaying && currentCoverUrl) {
-      fetch(currentCoverUrl)
-        .then(r => Buffer.from(r.arrayBuffer()))
-        .then(buf => {
-          const icon = nativeImage.createFromBuffer(buf).resize({ width: 16, height: 16 })
-          if (!icon.isEmpty()) win.setOverlayIcon(icon, '正在播放')
-        })
-        .catch(() => win.setOverlayIcon(null, ''))
+      if (currentCoverUrl === cachedCoverUrl && cachedCoverIcon) {
+        win.setOverlayIcon(cachedCoverIcon, '正在播放')
+      } else {
+        fetch(currentCoverUrl)
+          .then(r => r.arrayBuffer())
+          .then(buf => {
+            const icon = nativeImage.createFromBuffer(buf).resize({ width: 16, height: 16 })
+            cachedCoverUrl = currentCoverUrl
+            cachedCoverIcon = icon
+            if (!icon.isEmpty() && !win.isDestroyed()) win.setOverlayIcon(icon, '正在播放')
+          })
+          .catch(() => { if (!win.isDestroyed()) win.setOverlayIcon(null, '') })
+      }
     } else {
       win.setOverlayIcon(null, '')
     }
-
-    console.log('[ThumbnailBar] Updated, playing:', isPlaying)
   } catch (err) {
     console.log('[ThumbnailBar] Error:', (err as Error).message)
   }

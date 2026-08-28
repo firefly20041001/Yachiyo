@@ -154,23 +154,24 @@ export function initAudio() {
   setupMediaSessionHandlers()
 
   audio.addEventListener('timeupdate', () => {
-    usePlaybackStore.getState().setCurrentTime(audio.currentTime)
+    const state = usePlaybackStore.getState()
+    state.setCurrentTime(audio.currentTime)
 
-    const { lyrics } = usePlaybackStore.getState()
+    const { lyrics, currentLyricIndex } = state
     if (lyrics?.lines.length) {
+      const timeMs = audio.currentTime * 1000
       let index = -1
       for (let i = 0; i < lyrics.lines.length; i++) {
-        if (lyrics.lines[i].time <= audio.currentTime * 1000) index = i
+        if (lyrics.lines[i].time <= timeMs) index = i
       }
-      if (index !== usePlaybackStore.getState().currentLyricIndex) {
-        usePlaybackStore.getState().setCurrentLyricIndex(index)
+      if (index !== currentLyricIndex) {
+        state.setCurrentLyricIndex(index)
       }
     }
 
-    const { lyrics: l, currentLyricIndex } = usePlaybackStore.getState()
-    if (l && currentLyricIndex >= 0 && currentLyricIndex !== lastLyricIndex) {
+    if (lyrics && currentLyricIndex >= 0 && currentLyricIndex !== lastLyricIndex) {
       lastLyricIndex = currentLyricIndex
-      const line = l.lines[currentLyricIndex]
+      const line = lyrics.lines[currentLyricIndex]
       if (line) {
         try { window.api.lyricsWindow.updateLine(line.text, line.translation) } catch {}
       }
