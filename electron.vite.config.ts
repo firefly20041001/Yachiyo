@@ -1,7 +1,9 @@
 import { resolve } from 'path'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import react from '@vitejs/plugin-react'
-import { copyFileSync } from 'fs'
+import { copyFileSync, readFileSync } from 'fs'
+
+const pkg = JSON.parse(readFileSync('package.json', 'utf8'))
 
 // Plugin to copy lyrics.html to output
 function copyLyricsHtml(): any {
@@ -35,6 +37,10 @@ export default defineConfig({
         '@renderer': resolve('src/renderer'),
         '@shared': resolve('src/shared')
       }
+    },
+    define: {
+      // Single source of truth for the version is package.json
+      __APP_VERSION__: JSON.stringify(pkg.version)
     },
     plugins: [react(), copyLyricsHtml()]
   }
