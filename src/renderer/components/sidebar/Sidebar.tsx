@@ -63,11 +63,20 @@ export function Sidebar({ onNavigate, activePage }: SidebarProps) {
       )}
 
       <div className="sidebar-bottom">
-        <button className="sidebar-btn" onClick={toggleTheme}>
+        <button
+          className="sidebar-btn"
+          onClick={toggleTheme}
+          title={theme === 'dark' ? '切换到浅色主题' : '切换到深色主题'}
+        >
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </button>
-        <button className="sidebar-btn sidebar-collapse-btn" onClick={toggleSidebar}>
+        <button
+          className="sidebar-btn sidebar-collapse-btn"
+          onClick={toggleSidebar}
+          title={sidebarCollapsed ? '展开侧栏' : '折叠侧栏'}
+        >
           {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          {!sidebarCollapsed && <span className="sidebar-btn-label">折叠侧栏</span>}
         </button>
       </div>
     </motion.aside>

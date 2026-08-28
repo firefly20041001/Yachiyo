@@ -27,7 +27,7 @@ interface UIState {
 export const useUIStore = create<UIState>((set, get) => ({
   theme: (localStorage.getItem('theme') as Theme) || 'dark',
   viewMode: 'full',
-  sidebarCollapsed: false,
+  sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
   showLyrics: false,
   showNowPlaying: false,
   activePage: 'home',
@@ -49,7 +49,12 @@ export const useUIStore = create<UIState>((set, get) => ({
   },
 
   setViewMode: (mode) => set({ viewMode: mode }),
-  toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+  toggleSidebar: () =>
+    set((state) => {
+      const sidebarCollapsed = !state.sidebarCollapsed
+      localStorage.setItem('sidebarCollapsed', String(sidebarCollapsed))
+      return { sidebarCollapsed }
+    }),
   toggleLyrics: () => set((state) => ({ showLyrics: !state.showLyrics })),
   setActivePage: (page) => set({ activePage: page }),
   setSearchQuery: (query, source) => set({ searchQuery: query, searchSource: source || null }),

@@ -177,6 +177,15 @@
 
 .sidebar-collapse-btn {
   margin-left: auto;
+  width: auto;
+  gap: 6px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.sidebar-btn-label {
+  white-space: nowrap;
 }
 
 .sidebar-collapsed .sidebar-bottom {
@@ -185,4 +194,6 @@
 
 .sidebar-collapsed .sidebar-collapse-btn {
   margin-left: 0;
+  width: 36px;
+  padding: 0;
 }
