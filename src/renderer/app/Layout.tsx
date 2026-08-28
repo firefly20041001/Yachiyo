@@ -30,7 +30,18 @@ export function Layout({ children, activePage, onNavigate }: LayoutProps) {
               </button>
             </div>
           </div>
-          <main className="main-content">
+          <main
+            className="main-content"
+            onScroll={(e) => {
+              // Drives the header glass: only blur/tint when content is
+              // actually scrolled under the sticky header
+              const el = e.currentTarget
+              const scrolled = el.scrollTop > 8 ? 'true' : 'false'
+              if (el.getAttribute('data-scrolled') !== scrolled) {
+                el.setAttribute('data-scrolled', scrolled)
+              }
+            }}
+          >
             {children}
           </main>
         </div>

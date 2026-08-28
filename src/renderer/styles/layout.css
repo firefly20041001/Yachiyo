@@ -116,7 +116,11 @@
 
 /* Page header: sticky glass whose tint and blur fade out toward the
    bottom via a gradient mask — no hard-edged band. The ::before carries
-   the backdrop blur so the mask never fades the header text itself */
+   the backdrop blur so the mask never fades the header text itself,
+   and extends 48px below the header so the blurred→sharp transition is
+   a long gradient instead of a visible tear. It only appears once
+   content is scrolled under the header (data-scrolled on .main-content),
+   so a page at rest has no band at all */
 .page-header {
   position: sticky;
   top: 0;
@@ -131,14 +135,20 @@
 .page-header::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: 0 0 -48px 0;
   z-index: -1;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
   backdrop-filter: blur(20px) saturate(150%);
   -webkit-backdrop-filter: blur(20px) saturate(150%);
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.06), transparent);
-  -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
-  mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.05), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 96%);
+  mask-image: linear-gradient(to bottom, black 50%, transparent 96%);
+}
+
+.main-content[data-scrolled='true'] .page-header::before {
+  opacity: 1;
 }
 
 .page-header h1 {
