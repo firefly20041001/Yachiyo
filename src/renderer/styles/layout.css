@@ -114,13 +114,31 @@
   padding-bottom: 100px;
 }
 
-/* Page header blends into the page (no translucent band); it scrolls
-   away with the content instead of sticking */
+/* Page header: sticky glass whose tint and blur fade out toward the
+   bottom via a gradient mask — no hard-edged band. The ::before carries
+   the backdrop blur so the mask never fades the header text itself */
 .page-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
+  margin: 0 -24px;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.06), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
 }
 
 .page-header h1 {
