@@ -91,8 +91,8 @@ export function PlayerBar() {
             <div style={{ position: 'relative' }}>
               <button className="player-action-btn" onClick={() => setShowQualityMenu(!showQualityMenu)}>{qualityLabels[quality]}</button>
               {showQualityMenu && (
-                <div className="add-to-playlist-menu" style={{ position: 'absolute', right: 0, bottom: '100%', marginBottom: 4, zIndex: 100 }} onClick={(e) => e.stopPropagation()}>
-                  <div className="add-menu-title">音质</div>
+                <div className="quality-menu" onClick={(e) => e.stopPropagation()}>
+                 <div className="add-menu-title">音质</div>
                   {(Object.entries(qualityLabels) as [QualityLevel, string][]).map(([key, label]) => (
                     <button key={key} className={`add-menu-item ${quality === key ? 'active' : ''}`} onClick={() => { setQuality(key); setShowQualityMenu(false) }}>
                       {label}

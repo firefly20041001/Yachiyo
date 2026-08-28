@@ -360,6 +360,21 @@
   color: var(--accent-primary);
 }
 
+/* Quality Menu */
+.quality-menu {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  z-index: 100;
+  min-width: 80px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 4px;
+}
+
 .player-lyrics-btn {
   font-size: 16px;
   font-weight: 700;
