@@ -25,9 +25,12 @@
 
 /* Collapsed rail: 88px wide, icons centered. Centering is done with
    animated padding (not align/justify flips) so nothing jumps when the
-   class flips at animation start */
+   class flips at animation start. gap must go to 0 when the label is
+   hidden — a zero-width label still occupies the gap, which would
+   flex-shrink the icon */
 .sidebar-collapsed .sidebar-logo {
   padding: 8px 16px;
+  gap: 0;
 }
 
 /* Logo */
@@ -38,6 +41,10 @@
   padding: 8px 12px;
   margin-bottom: 24px;
   transition: padding 0.3s ease;
+}
+
+.sidebar-logo img {
+  flex-shrink: 0;
 }
 
 .logo-icon {
@@ -94,6 +101,10 @@
   position: relative;
 }
 
+.nav-item svg {
+  flex-shrink: 0;
+}
+
 .nav-item:hover {
   background: var(--glass-bg);
   color: var(--text-primary);
@@ -133,6 +144,7 @@
 .sidebar-collapsed .nav-item {
   /* (64 inner - 20 icon) / 2 = 22px left padding centers the icon */
   padding: 10px 22px 10px 22px;
+  gap: 0;
 }
 
 /* Account Status */
