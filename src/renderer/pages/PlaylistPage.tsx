@@ -34,13 +34,7 @@ export function PlaylistPage() {
     try {
       const playlist = await window.api.playlist.getById(playlistId)
       if (playlist) {
-        // Sort: manual tracks first, then imported tracks
-        const sorted = [...playlist.tracks].sort((a, b) => {
-          if (a.origin === 'manual' && b.origin !== 'manual') return -1
-          if (a.origin !== 'manual' && b.origin === 'manual') return 1
-          return 0
-        })
-        setPlaylistTracks(sorted.map(t => t.track))
+        setPlaylistTracks(playlist.tracks.map(t => t.track))
       }
     } catch {
       setPlaylistTracks([])
