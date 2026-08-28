@@ -4,10 +4,10 @@ import { useAccountStore } from '../stores/accountStore'
 import { AccountCard } from '../components/account/AccountCard'
 
 export function AccountPage() {
-  const { accounts, refreshAccounts } = useAccountStore()
+  const { accounts, loadAccounts, refreshAccounts } = useAccountStore()
 
   useEffect(() => {
-    refreshAccounts()
+    loadAccounts()
   }, [])
 
   return (

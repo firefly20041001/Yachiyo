@@ -57,7 +57,7 @@ function TrayAndShortcutHandler() {
 
 export default function App() {
   const { activePage, setActivePage } = useUIStore()
-  const { refreshAccounts } = useAccountStore()
+  const { loadAccounts } = useAccountStore()
   const { theme } = useUIStore()
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function App() {
   }, [theme])
 
   useEffect(() => {
-    refreshAccounts()
+    loadAccounts()
     usePlaylistStore.getState().refreshPlaylists()
   }, [])
 

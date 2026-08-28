@@ -7,6 +7,7 @@ interface AccountState {
 
   setAccounts: (accounts: Record<AccountProvider, AccountInfo | null>) => void
   setLoading: (loading: boolean) => void
+  loadAccounts: () => Promise<void>
   refreshAccounts: () => Promise<void>
   logout: (provider: AccountProvider) => Promise<void>
 }
@@ -18,10 +19,19 @@ export const useAccountStore = create<AccountState>((set) => ({
   setAccounts: (accounts) => set({ accounts }),
   setLoading: (loading) => set({ isLoading: loading }),
 
+  loadAccounts: async () => {
+    try {
+      const accounts = await window.api.accounts.getAll()
+      set({ accounts })
+    } catch (err) {
+      console.error('Failed to load accounts:', err)
+    }
+  },
+
   refreshAccounts: async () => {
     set({ isLoading: true })
     try {
-      const accounts = await window.api.accounts.getAll()
+      const accounts = await window.api.accounts.refresh()
       set({ accounts })
     } catch (err) {
       console.error('Failed to refresh accounts:', err)

@@ -45,6 +45,39 @@ export class AccountService {
     }
   }
 
+  async refreshAccount(provider: AccountProvider): Promise<AccountInfo | null> {
+    const p = this.getProvider(provider)
+    const cookie = p.getCookie()
+    if (!cookie) return null
+
+    const stored = p.getStoredAccountInfo()
+    try {
+      const info = await p.getAccountInfo(cookie)
+      if (info) {
+        // A refresh is not a login: keep the original login time, and don't
+        // let empty fields from a degraded API response wipe stored values
+        p.saveAccountInfo({
+          ...info,
+          userId: info.userId || stored?.userId || '',
+          displayName: info.displayName || stored?.displayName || '',
+          avatarUrl: info.avatarUrl || stored?.avatarUrl || '',
+          lastLoginAt: stored?.lastLoginAt ?? info.lastLoginAt
+        })
+        return p.getStoredAccountInfo()
+      }
+    } catch (err) {
+      console.error(`[${provider}] refresh account failed:`, err)
+    }
+    return stored
+  }
+
+  async refreshAccounts(): Promise<Record<AccountProvider, AccountInfo | null>> {
+    return {
+      netease: await this.refreshAccount('netease'),
+      qqmusic: await this.refreshAccount('qqmusic')
+    }
+  }
+
   stopAllPolling(): void {
     for (const [id, interval] of this.loginPollingIntervals) {
       clearInterval(interval)

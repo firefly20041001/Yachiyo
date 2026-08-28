@@ -59,6 +59,7 @@ const api: ElectronAPI = {
   accounts: {
     openLogin: (provider) => ipcRenderer.invoke('accounts:openLogin', provider),
     getAll: () => ipcRenderer.invoke('accounts:getAll'),
+    refresh: () => ipcRenderer.invoke('accounts:refresh'),
     getInfo: (provider) => ipcRenderer.invoke('accounts:getInfo', provider),
     logout: (provider) => ipcRenderer.invoke('accounts:logout', provider),
     closeLogin: () => ipcRenderer.invoke('accounts:closeLogin')

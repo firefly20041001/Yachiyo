@@ -72,6 +72,7 @@ export interface ElectronAPI {
   accounts: {
     openLogin: (provider: AccountProvider) => Promise<boolean>
     getAll: () => Promise<Record<AccountProvider, AccountInfo | null>>
+    refresh: () => Promise<Record<AccountProvider, AccountInfo | null>>
     getInfo: (provider: AccountProvider) => Promise<AccountInfo | null>
     logout: (provider: AccountProvider) => Promise<void>
     closeLogin: () => Promise<void>

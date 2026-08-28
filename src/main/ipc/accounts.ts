@@ -51,6 +51,10 @@ export function registerAccountIPC(): void {
     return accountService.getAllAccounts()
   })
 
+  ipcMain.handle('accounts:refresh', async () => {
+    return accountService.refreshAccounts()
+  })
+
   ipcMain.handle('accounts:getInfo', async (_event, provider: AccountProvider) => {
     return accountService.getStoredAccountInfo(provider)
   })
