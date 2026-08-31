@@ -12,18 +12,9 @@ win:
   executableName: Yachiyo
   icon: resources/icon.png
   target:
-    - target: nsis
+    - target: dir
       arch:
         - x64
-nsis:
-  artifactName: ${name}-${version}-setup.${ext}
-  shortcutName: ${productName}
-  uninstallDisplayName: ${productName}
-  createDesktopShortcut: always
-  createStartMenuShortcut: true
-  allowToChangeInstallationDirectory: true
-  oneClick: false
-  perMachine: false
-  installerIcon: build/icon.ico
-  uninstallerIcon: build/icon.ico
-  include: build/installer.nsh
+# The Windows installer is produced by Inno Setup from the unpacked app
+# above: run `pnpm run build:win`, which invokes build/yachiyo.iss via
+# scripts/make-inno-installer.mjs after electron-builder finishes.

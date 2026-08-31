@@ -47,6 +47,8 @@ npm run build:mac     # macOS
 npm run build:linux   # Linux
 ```
 
+Windows 安装器由 [Inno Setup 6](https://jrsoftware.org/isdl.php) 打包:`build:win` 先用 electron-builder 产出免安装目录,再自动调用 Inno Setup 编译 `build/yachiyo.iss` 生成 `dist/installer/Yachiyo-<版本>-setup.exe`(脚本按标准路径自动定位 ISCC.exe,也可用环境变量 `INNO_SETUP_PATH` 指定)。
+
 ## 代码规范
 
 ```bash
